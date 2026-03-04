@@ -1,39 +1,18 @@
-"""
-Generate US_modeling.ipynb — ETF Return Prediction Multi-Model Comparison
-"""
-import json, os
+#!/usr/bin/env python
+# coding: utf-8
 
-cells = []
+# # ETF (QQQ) Daily Return Prediction — Multi-Model Comparison
+# 
+# > **Target**: Daily Return (%) of QQQ ETF  
+# > **Period**: 2014-01-02 ~ 2025-12-31  
+# > **Text Representations**: TF-IDF, FinBERT  
+# > **Financial Features**: Gold, Oil, Bond, CAD, CNY, EUR, JPY, MXN, VIX, Bitcoin (daily returns)  
+# > **Models**: 15+ models including Baselines, Tree-based, LSTM, Transformer, Ensemble
 
-def md(source):
-    lines = source.strip("\n").split("\n")
-    src = [l + "\n" for l in lines[:-1]]
-    if lines[-1]:
-        src.append(lines[-1])
-    cells.append({"cell_type": "markdown", "metadata": {}, "source": src})
+# In[ ]:
 
-def code(source):
-    lines = source.strip("\n").split("\n")
-    src = [l + "\n" for l in lines[:-1]]
-    if lines[-1]:
-        src.append(lines[-1])
-    cells.append({"cell_type": "code", "metadata": {}, "outputs": [], "execution_count": None, "source": src})
 
-# ═══════════════════════════════════════════════════════════
-# CELL 1: TITLE
-# ═══════════════════════════════════════════════════════════
-md("""# ETF (QQQ) Daily Return Prediction — Multi-Model Comparison
-
-> **Target**: Daily Return (%) of QQQ ETF  
-> **Period**: 2014-01-02 ~ 2025-12-31  
-> **Text Representations**: TF-IDF, FinBERT  
-> **Financial Features**: Gold, Oil, Bond, CAD, CNY, EUR, JPY, MXN, VIX, Bitcoin (daily returns)  
-> **Models**: 15+ models including Baselines, Tree-based, LSTM, Transformer, Ensemble""")
-
-# ═══════════════════════════════════════════════════════════
-# CELL 2: IMPORTS & SEEDS
-# ═══════════════════════════════════════════════════════════
-code("""import warnings
+import warnings
 warnings.filterwarnings('ignore')
 
 import os, re, json, time
@@ -89,7 +68,8 @@ from keras.callbacks import EarlyStopping
 from transformers import BertTokenizer, BertModel
 
 # Plot settings
-%matplotlib inline
+import matplotlib
+matplotlib.use('Agg')
 plt.rcParams['figure.dpi'] = 150
 plt.rcParams['savefig.dpi'] = 300
 plt.rcParams['font.size'] = 10
@@ -97,12 +77,13 @@ plt.rcParams['axes.titlesize'] = 12
 plt.rcParams['figure.figsize'] = (12, 5)
 sns.set_style('whitegrid')
 
-print("All imports successful.")""")
+print("All imports successful.")
 
-# ═══════════════════════════════════════════════════════════
-# CELL 3: CONFIGURATION
-# ═══════════════════════════════════════════════════════════
-code("""# ============================================================
+
+# In[ ]:
+
+
+# ============================================================
 # CONFIGURATION
 # ============================================================
 SEED = 42
@@ -141,12 +122,13 @@ TARGET_COL = 'Return'
 os.makedirs('figures', exist_ok=True)
 os.makedirs('results', exist_ok=True)
 
-print("Configuration loaded.")""")
+print("Configuration loaded.")
 
-# ═══════════════════════════════════════════════════════════
-# CELL 4: UTILITY FUNCTIONS
-# ═══════════════════════════════════════════════════════════
-code("""# ============================================================
+
+# In[ ]:
+
+
+# ============================================================
 # UTILITY FUNCTIONS
 # ============================================================
 results_list = []
@@ -157,7 +139,7 @@ feature_importances_dict = {} # model_name -> (names, values)
 
 def record_result(model_name, text_rep, y_true, y_pred,
                   y_val_true=None, y_val_pred=None):
-    \"\"\"Compute metrics and store results.\"\"\"
+    """Compute metrics and store results."""
     rmse = np.sqrt(mean_squared_error(y_true, y_pred))
     mae  = mean_absolute_error(y_true, y_pred)
     r2   = r2_score(y_true, y_pred)
@@ -180,7 +162,7 @@ def record_result(model_name, text_rep, y_true, y_pred,
 
 
 def create_sequences(X, y, window):
-    \"\"\"Create overlapping window sequences for time-series models.\"\"\"
+    """Create overlapping window sequences for time-series models."""
     Xs, ys = [], []
     for i in range(window, len(X)):
         Xs.append(X[i - window:i])
@@ -189,19 +171,19 @@ def create_sequences(X, y, window):
 
 
 def temporal_split_indices(n, train_r=0.70, val_r=0.15):
-    \"\"\"Return (train_end, val_end) indices for chronological split.\"\"\"
+    """Return (train_end, val_end) indices for chronological split."""
     train_end = int(n * train_r)
     val_end   = int(n * (train_r + val_r))
     return train_end, val_end
 
 
 def split_sequences(X_seq, y_seq, n_train, n_val, window):
-    \"\"\"Split pre-built sequences into train/val/test respecting time order.
+    """Split pre-built sequences into train/val/test respecting time order.
     After create_sequences, index k predicts target at original position k+window.
     Train targets: positions window .. n_train-1   -> seq indices 0 .. n_train-window-1
     Val targets  : positions n_train .. n_train+n_val-1 -> next n_val
     Test targets : remainder
-    \"\"\"
+    """
     tr_end = n_train - window
     va_end = tr_end + n_val
     return (X_seq[:tr_end], y_seq[:tr_end],
@@ -210,10 +192,10 @@ def split_sequences(X_seq, y_seq, n_train, n_val, window):
 
 
 def create_sequences_per_split(X_train, y_train, X_val, y_val, X_test, y_test, window):
-    \"\"\"Build sequences separately for each split to prevent boundary contamination.
+    """Build sequences separately for each split to prevent boundary contamination.
     For val/test, uses the last 'window' rows of the previous split as burn-in context.
     This avoids future information leaking across split boundaries.
-    \"\"\"
+    """
     # Train: pure sequences within training data
     X_tr_seq, y_tr_seq = create_sequences(X_train, y_train, window)
 
@@ -231,7 +213,7 @@ def create_sequences_per_split(X_train, y_train, X_val, y_val, X_test, y_test, w
 
 
 def build_bilstm(input_shape, units=128):
-    \"\"\"Build a Bidirectional LSTM model.\"\"\"
+    """Build a Bidirectional LSTM model."""
     model = Sequential([
         Bidirectional(LSTM(units, return_sequences=False),
                       input_shape=input_shape),
@@ -245,7 +227,7 @@ def build_bilstm(input_shape, units=128):
 
 
 def build_transformer(input_shape, num_heads=4, ff_dim=64, num_blocks=2):
-    \"\"\"Build a Transformer Encoder model for time-series.\"\"\"
+    """Build a Transformer Encoder model for time-series."""
     inputs = Input(shape=input_shape)
     x = Dense(ff_dim)(inputs)
 
@@ -273,7 +255,7 @@ def build_transformer(input_shape, num_heads=4, ff_dim=64, num_blocks=2):
 
 def train_nn(model, X_tr, y_tr, X_va, y_va,
              epochs=200, batch=64, patience=15, name='model'):
-    \"\"\"Train a Keras model with EarlyStopping, return history dict.\"\"\"
+    """Train a Keras model with EarlyStopping, return history dict."""
     es = EarlyStopping(monitor='val_loss', patience=patience,
                        restore_best_weights=True, verbose=0)
     t0 = time.time()
@@ -287,14 +269,15 @@ def train_nn(model, X_tr, y_tr, X_va, y_va,
     }
     return hist
 
-print("Utility functions defined.")""")
+print("Utility functions defined.")
 
-# ═══════════════════════════════════════════════════════════
-# SECTION 1: DATA LOADING
-# ═══════════════════════════════════════════════════════════
-md("""## 1. Data Loading & Preprocessing""")
 
-code("""# ============================================================
+# ## 1. Data Loading & Preprocessing
+
+# In[ ]:
+
+
+# ============================================================
 # 1-1. Load Data & Compute Returns
 # ============================================================
 df = pd.read_csv("US_research.csv", encoding="utf-8")
@@ -347,9 +330,13 @@ print(f"Dataset shape : {df.shape}")
 print(f"Date range    : {df['Date'].min().date()} ~ {df['Date'].max().date()}")
 print(f"Return stats  : mean={df['Return'].mean():.6f}, std={df['Return'].std():.4f}")
 print(f"Feature cols  : {fin_return_cols}")
-df.head()""")
+df.head()
 
-code("""# ============================================================
+
+# In[ ]:
+
+
+# ============================================================
 # 1-2. Text Preprocessing
 # ============================================================
 stop_words = set(stopwords.words('english'))
@@ -367,9 +354,13 @@ def preprocess_text(text):
     return " ".join(tokens)
 
 df['Headline_clean'] = df['Headline'].apply(preprocess_text)
-print(f"Sample cleaned: {df['Headline_clean'].iloc[5][:80]}...")""")
+print(f"Sample cleaned: {df['Headline_clean'].iloc[5][:80]}...")
 
-code("""# ============================================================
+
+# In[ ]:
+
+
+# ============================================================
 # 1-3. Temporal Train / Val / Test Split
 # ============================================================
 n = len(df)
@@ -400,14 +391,15 @@ n_train = len(y_train)
 n_val   = len(y_val)
 n_test  = len(y_test)
 
-print(f"\\nX_train_fin: {X_train_fin.shape}  X_val: {X_val_fin.shape}  X_test: {X_test_fin.shape}")""")
+print(f"\nX_train_fin: {X_train_fin.shape}  X_val: {X_val_fin.shape}  X_test: {X_test_fin.shape}")
 
-# ═══════════════════════════════════════════════════════════
-# SECTION 2: FEATURE EXTRACTION
-# ═══════════════════════════════════════════════════════════
-md("""## 2. Feature Extraction (TF-IDF & FinBERT)""")
 
-code("""# ============================================================
+# ## 2. Feature Extraction (TF-IDF & FinBERT)
+
+# In[ ]:
+
+
+# ============================================================
 # 2-1. TF-IDF Features
 # ============================================================
 tfidf_vec = TfidfVectorizer(max_features=TFIDF_MAX_FEATURES,
@@ -424,9 +416,13 @@ X_val_tfidf   = np.hstack([tfidf_val,   X_val_fin])
 X_test_tfidf  = np.hstack([tfidf_test,  X_test_fin])
 
 print(f"TF-IDF dims   : {tfidf_train.shape[1]}")
-print(f"Combined flat  : {X_train_tfidf.shape[1]}  (TF-IDF {tfidf_train.shape[1]} + Financial {X_train_fin.shape[1]})")""")
+print(f"Combined flat  : {X_train_tfidf.shape[1]}  (TF-IDF {tfidf_train.shape[1]} + Financial {X_train_fin.shape[1]})")
 
-code("""# ============================================================
+
+# In[ ]:
+
+
+# ============================================================
 # 2-2. FinBERT Embedding Extraction
 # ============================================================
 print("Loading FinBERT model from ./finbert ...")
@@ -470,9 +466,13 @@ X_train_fb = np.hstack([fb_train, X_train_fin])
 X_val_fb   = np.hstack([fb_val,   X_val_fin])
 X_test_fb  = np.hstack([fb_test,  X_test_fin])
 
-print(f"Combined flat  : {X_train_fb.shape[1]}  (FinBERT {fb_train.shape[1]} + Financial {X_train_fin.shape[1]})")""")
+print(f"Combined flat  : {X_train_fb.shape[1]}  (FinBERT {fb_train.shape[1]} + Financial {X_train_fin.shape[1]})")
 
-code("""# ============================================================
+
+# In[ ]:
+
+
+# ============================================================
 # 2-2b. FinBERT Sentiment Probability Features
 # ============================================================
 # Use FinBERT's classification head for sentiment (positive/negative/neutral)
@@ -484,7 +484,7 @@ bert_cls_model = BertForSequenceClassification.from_pretrained('./finbert')
 bert_cls_model.eval()
 
 def extract_finbert_sentiment(texts, batch_size=FINBERT_BATCH_SIZE):
-    \"\"\"Extract 3-class sentiment probabilities from FinBERT.\"\"\"
+    """Extract 3-class sentiment probabilities from FinBERT."""
     all_probs = []
     for i in range(0, len(texts), batch_size):
         batch = list(texts[i:i + batch_size])
@@ -514,9 +514,13 @@ print(f"FinBERT+Sent flat: {X_train_fb_sent.shape[1]}  (PCA {fb_train.shape[1]} 
 X_train_sent = np.hstack([sent_train, X_train_fin])
 X_val_sent   = np.hstack([sent_val,   X_val_fin])
 X_test_sent  = np.hstack([sent_test,  X_test_fin])
-print(f"Sent-only  flat  : {X_train_sent.shape[1]}  (Sent 3 + Fin {X_train_fin.shape[1]})")""")
+print(f"Sent-only  flat  : {X_train_sent.shape[1]}  (Sent 3 + Fin {X_train_fin.shape[1]})")
 
-code("""# ============================================================
+
+# In[ ]:
+
+
+# ============================================================
 # 2-3. Window Sequences for LSTM / Transformer
 # ============================================================
 # PCA on TF-IDF for sequence models (reduce 500 -> SEQ_PCA_DIM)
@@ -571,14 +575,15 @@ print(f"Fin-only sequences: train {X_tr_fin_s.shape}, val {X_va_fin_s.shape}, te
 # Verify test targets are aligned
 assert len(y_te_tfidf_s) == n_test, f"TF-IDF seq test size mismatch: {len(y_te_tfidf_s)} vs {n_test}"
 assert len(y_te_fb_s)    == n_test, f"FinBERT seq test size mismatch: {len(y_te_fb_s)} vs {n_test}"
-print("\\nTest target alignment verified.")""")
+print("\nTest target alignment verified.")
 
-# ═══════════════════════════════════════════════════════════
-# SECTION 3: BASELINE MODELS
-# ═══════════════════════════════════════════════════════════
-md("""## 3. Baseline Models""")
 
-code("""# ============================================================
+# ## 3. Baseline Models
+
+# In[ ]:
+
+
+# ============================================================
 # 3-1. Naive Forecast (previous day return = today's prediction)
 # ============================================================
 print("=" * 60)
@@ -609,15 +614,19 @@ svr_test_pred = svr.predict(X_test_fin)
 record_result("SVR (RBF)", "None", y_test, svr_test_pred,
               y_val, svr_val_pred)
 
-print("\\nBaseline models done.")""")
+print("\nBaseline models done.")
 
-code("""# ============================================================
+
+# In[ ]:
+
+
+# ============================================================
 # 3-4. ARIMA Baseline
 # ============================================================
 from statsmodels.tsa.arima.model import ARIMA
 from arch import arch_model
 
-print("\\n--- ARIMA Baseline ---")
+print("\n--- ARIMA Baseline ---")
 try:
     # Fit ARIMA(1,0,1) on train returns
     arima_model = ARIMA(y_train, order=(1, 0, 1))
@@ -632,7 +641,7 @@ except Exception as e:
 # ============================================================
 # 3-5. GARCH(1,1) Baseline
 # ============================================================
-print("\\n--- GARCH Baseline ---")
+print("\n--- GARCH Baseline ---")
 try:
     # GARCH models variance, mean is constant
     am = arch_model(y_train * 100, vol='Garch', p=1, q=1, mean='ARX', lags=1)
@@ -657,7 +666,7 @@ except Exception as e:
 # ============================================================
 # 3-6. FinBERT Sentiment + LightGBM  (sentiment probs only)
 # ============================================================
-print("\\n--- Sentiment-Only LightGBM ---")
+print("\n--- Sentiment-Only LightGBM ---")
 lgb_sent = lgb.LGBMRegressor(
     n_estimators=200, max_depth=15, learning_rate=0.05,
     random_state=SEED, verbose=-1, n_jobs=-1)
@@ -667,14 +676,15 @@ lgb_sent.fit(X_train_sent, y_train,
 lgb_sent_test = lgb_sent.predict(X_test_sent)
 lgb_sent_val  = lgb_sent.predict(X_val_sent)
 record_result("Sentiment + LightGBM", "Sentiment", y_test, lgb_sent_test,
-              y_val, lgb_sent_val)""")
+              y_val, lgb_sent_val)
 
-# ═══════════════════════════════════════════════════════════
-# SECTION 4: TF-IDF MODELS
-# ═══════════════════════════════════════════════════════════
-md("""## 4. TF-IDF Based Models""")
 
-code("""# ============================================================
+# ## 4. TF-IDF Based Models
+
+# In[ ]:
+
+
+# ============================================================
 # 4-0. Hyperparameter Tuning via Optuna (TimeSeriesSplit CV)
 # ============================================================
 import optuna
@@ -735,9 +745,13 @@ from sklearn.linear_model import RidgeCV
 ridge_cv = RidgeCV(alphas=[0.1, 1.0, 5.0, 10.0, 50.0, 100.0], cv=tscv_tune)
 ridge_cv.fit(X_train_fb, y_train)
 best_ridge_alpha = ridge_cv.alpha_
-print(f"  Best Ridge alpha: {best_ridge_alpha}")""")
+print(f"  Best Ridge alpha: {best_ridge_alpha}")
 
-code("""# ============================================================
+
+# In[ ]:
+
+
+# ============================================================
 # 4-1. TF-IDF + Random Forest
 # ============================================================
 print("=" * 60)
@@ -754,9 +768,13 @@ record_result("TF-IDF + RF", "TF-IDF", y_test, rf_test_pred, y_val, rf_val_pred)
 
 # Store feature importance
 fi_names = [f"tfidf_{i}" for i in range(TFIDF_MAX_FEATURES)] + fin_return_cols
-feature_importances_dict["TF-IDF + RF"] = (fi_names, rf_tfidf.feature_importances_)""")
+feature_importances_dict["TF-IDF + RF"] = (fi_names, rf_tfidf.feature_importances_)
 
-code("""# ============================================================
+
+# In[ ]:
+
+
+# ============================================================
 # 4-2. TF-IDF + LightGBM
 # ============================================================
 lgb_tfidf = lgb.LGBMRegressor(**best_lgbm_params,
@@ -771,9 +789,13 @@ lgb_test_pred = lgb_tfidf.predict(X_test_tfidf)
 record_result("TF-IDF + LightGBM", "TF-IDF", y_test, lgb_test_pred, y_val, lgb_val_pred)
 
 fi_names = [f"tfidf_{i}" for i in range(TFIDF_MAX_FEATURES)] + fin_return_cols
-feature_importances_dict["TF-IDF + LightGBM"] = (fi_names, lgb_tfidf.feature_importances_)""")
+feature_importances_dict["TF-IDF + LightGBM"] = (fi_names, lgb_tfidf.feature_importances_)
 
-code("""# ============================================================
+
+# In[ ]:
+
+
+# ============================================================
 # 4-3. TF-IDF + BiLSTM  (window-based sequences)
 # ============================================================
 bilstm_tfidf = build_bilstm(
@@ -786,9 +808,13 @@ train_nn(bilstm_tfidf, X_tr_tfidf_s, y_tr_tfidf_s,
 bilstm_tfidf_val  = bilstm_tfidf.predict(X_va_tfidf_s, verbose=0).flatten()
 bilstm_tfidf_test = bilstm_tfidf.predict(X_te_tfidf_s, verbose=0).flatten()
 record_result("TF-IDF + BiLSTM", "TF-IDF", y_te_tfidf_s, bilstm_tfidf_test,
-              y_va_tfidf_s, bilstm_tfidf_val)""")
+              y_va_tfidf_s, bilstm_tfidf_val)
 
-code("""# ============================================================
+
+# In[ ]:
+
+
+# ============================================================
 # 4-4. TF-IDF + Hybrid  (RF feature selection -> BiLSTM)
 # ============================================================
 # Step 1: RF to select top-K features from flat TF-IDF + fin
@@ -822,14 +848,15 @@ train_nn(bilstm_hybrid, X_tr_hyb, y_tr_hyb,
 hyb_val  = bilstm_hybrid.predict(X_va_hyb, verbose=0).flatten()
 hyb_test = bilstm_hybrid.predict(X_te_hyb, verbose=0).flatten()
 record_result("TF-IDF + Hybrid(RF->BiLSTM)", "TF-IDF", y_te_hyb, hyb_test,
-              y_va_hyb, hyb_val)""")
+              y_va_hyb, hyb_val)
 
-# ═══════════════════════════════════════════════════════════
-# SECTION 5: FINBERT MODELS
-# ═══════════════════════════════════════════════════════════
-md("""## 5. FinBERT Based Models""")
 
-code("""# ============================================================
+# ## 5. FinBERT Based Models
+
+# In[ ]:
+
+
+# ============================================================
 # 5-1. FinBERT + Ridge Regression
 # ============================================================
 print("=" * 60)
@@ -848,9 +875,13 @@ record_result("FinBERT + Ridge", "FinBERT", y_test, ridge_test_pred,
 # Store coefficient importance
 fb_feat_names = [f"FB_PC{i}" for i in range(FINBERT_PCA_DIM)] + fin_return_cols
 feature_importances_dict["FinBERT + Ridge"] = (
-    fb_feat_names, np.abs(ridge_fb.coef_))""")
+    fb_feat_names, np.abs(ridge_fb.coef_))
 
-code("""# ============================================================
+
+# In[ ]:
+
+
+# ============================================================
 # 5-2. FinBERT + LightGBM
 # ============================================================
 lgb_fb = lgb.LGBMRegressor(**best_lgbm_params,
@@ -865,9 +896,13 @@ record_result("FinBERT + LightGBM", "FinBERT", y_test, lgb_fb_test,
               y_val, lgb_fb_val)
 
 feature_importances_dict["FinBERT + LightGBM"] = (
-    fb_feat_names, lgb_fb.feature_importances_)""")
+    fb_feat_names, lgb_fb.feature_importances_)
 
-code("""# ============================================================
+
+# In[ ]:
+
+
+# ============================================================
 # 5-3. FinBERT + BiLSTM  (window-based sequences)
 # ============================================================
 bilstm_fb = build_bilstm(
@@ -880,14 +915,15 @@ train_nn(bilstm_fb, X_tr_fb_s, y_tr_fb_s,
 bilstm_fb_val  = bilstm_fb.predict(X_va_fb_s, verbose=0).flatten()
 bilstm_fb_test = bilstm_fb.predict(X_te_fb_s, verbose=0).flatten()
 record_result("FinBERT + BiLSTM", "FinBERT", y_te_fb_s, bilstm_fb_test,
-              y_va_fb_s, bilstm_fb_val)""")
+              y_va_fb_s, bilstm_fb_val)
 
-# ═══════════════════════════════════════════════════════════
-# SECTION 6: TRANSFORMER MODELS
-# ═══════════════════════════════════════════════════════════
-md("""## 6. Transformer Encoder Models""")
 
-code("""# ============================================================
+# ## 6. Transformer Encoder Models
+
+# In[ ]:
+
+
+# ============================================================
 # 6-1. TF-IDF + Transformer Encoder
 # ============================================================
 print("=" * 60)
@@ -905,9 +941,13 @@ train_nn(trans_tfidf, X_tr_tfidf_s, y_tr_tfidf_s,
 trans_tfidf_val  = trans_tfidf.predict(X_va_tfidf_s, verbose=0).flatten()
 trans_tfidf_test = trans_tfidf.predict(X_te_tfidf_s, verbose=0).flatten()
 record_result("TF-IDF + Transformer", "TF-IDF", y_te_tfidf_s, trans_tfidf_test,
-              y_va_tfidf_s, trans_tfidf_val)""")
+              y_va_tfidf_s, trans_tfidf_val)
 
-code("""# ============================================================
+
+# In[ ]:
+
+
+# ============================================================
 # 6-2. FinBERT + Transformer Encoder
 # ============================================================
 trans_fb = build_transformer(
@@ -921,14 +961,15 @@ train_nn(trans_fb, X_tr_fb_s, y_tr_fb_s,
 trans_fb_val  = trans_fb.predict(X_va_fb_s, verbose=0).flatten()
 trans_fb_test = trans_fb.predict(X_te_fb_s, verbose=0).flatten()
 record_result("FinBERT + Transformer", "FinBERT", y_te_fb_s, trans_fb_test,
-              y_va_fb_s, trans_fb_val)""")
+              y_va_fb_s, trans_fb_val)
 
-# ═══════════════════════════════════════════════════════════
-# SECTION 7: ENSEMBLE MODELS
-# ═══════════════════════════════════════════════════════════
-md("""## 7. Ensemble Models""")
 
-code("""# ============================================================
+# ## 7. Ensemble Models
+
+# In[ ]:
+
+
+# ============================================================
 # 7-1. TF-IDF Stacking  (RF + LGB + Ridge -> Ridge meta)
 # ============================================================
 print("=" * 60)
@@ -956,9 +997,13 @@ stack_tfidf.fit(X_train_tfidf, y_train)
 stk_tfidf_val  = stack_tfidf.predict(X_val_tfidf)
 stk_tfidf_test = stack_tfidf.predict(X_test_tfidf)
 record_result("TF-IDF + Stacking", "TF-IDF", y_test, stk_tfidf_test,
-              y_val, stk_tfidf_val)""")
+              y_val, stk_tfidf_val)
 
-code("""# ============================================================
+
+# In[ ]:
+
+
+# ============================================================
 # 7-2. FinBERT Stacking  (RF + LGB + Ridge -> Ridge meta)
 # ============================================================
 stack_fb = StackingRegressor(
@@ -979,9 +1024,13 @@ stack_fb.fit(X_train_fb, y_train)
 stk_fb_val  = stack_fb.predict(X_val_fb)
 stk_fb_test = stack_fb.predict(X_test_fb)
 record_result("FinBERT + Stacking", "FinBERT", y_test, stk_fb_test,
-              y_val, stk_fb_val)""")
+              y_val, stk_fb_val)
 
-code("""# ============================================================
+
+# In[ ]:
+
+
+# ============================================================
 # 7-3. Weighted Blending  (top-3 models by val RMSE)
 # ============================================================
 # Build temporary results to find best 3
@@ -1015,14 +1064,15 @@ for name, w in zip(blend_names, weights):
         blend_val += w * np.zeros(n_val)
 
 record_result("Weighted Blending (Top-3)", "Mixed", y_test, blend_test,
-              y_val, blend_val)""")
+              y_val, blend_val)
 
-# ═══════════════════════════════════════════════════════════
-# SECTION 8: ABLATION STUDY
-# ═══════════════════════════════════════════════════════════
-md("""## 8. Ablation Study — Effect of Text Features""")
 
-code("""# ============================================================
+# ## 8. Ablation Study — Effect of Text Features
+
+# In[ ]:
+
+
+# ============================================================
 # 8. ABLATION: Financial-only vs Financial+Text
 # ============================================================
 print("=" * 60)
@@ -1059,14 +1109,15 @@ bilstm_fin_test = bilstm_fin.predict(X_te_fin_s, verbose=0).flatten()
 r = record_result("BiLSTM (Fin Only)", "None", y_te_fin_s, bilstm_fin_test)
 ablation_results.append(r)
 
-print("\\nAblation complete.")""")
+print("\nAblation complete.")
 
-# ═══════════════════════════════════════════════════════════
-# SECTION 9: RESULTS & VISUALIZATION
-# ═══════════════════════════════════════════════════════════
-md("""## 9. Results & Visualization""")
 
-code("""# ============================================================
+# ## 9. Results & Visualization
+
+# In[ ]:
+
+
+# ============================================================
 # TABLE 1: Model Comparison Table
 # ============================================================
 results_df = pd.DataFrame(results_list)
@@ -1085,9 +1136,13 @@ print(display_df.to_string())
 
 # Save to CSV
 results_df.to_csv('results/model_comparison.csv', index=True, index_label='Rank')
-print("\\nSaved to results/model_comparison.csv")""")
+print("\nSaved to results/model_comparison.csv")
 
-code("""# ============================================================
+
+# In[ ]:
+
+
+# ============================================================
 # FIGURE 1: Performance Bar Chart  (Grouped Bar: RMSE & MAE)
 # ============================================================
 # Exclude ablation-only models for main comparison
@@ -1121,9 +1176,13 @@ for i, v in enumerate(main_models['R2'].values):
 plt.tight_layout()
 plt.savefig('figures/fig1_performance_bars.png', bbox_inches='tight')
 plt.show()
-print("Saved: figures/fig1_performance_bars.png")""")
+print("Saved: figures/fig1_performance_bars.png")
 
-code("""# ============================================================
+
+# In[ ]:
+
+
+# ============================================================
 # FIGURE 2: Actual vs Predicted  (Top-5 Models on Test Set)
 # ============================================================
 top5 = results_df[~results_df['Model'].str.contains('Fin Only|Naive')].head(5)
@@ -1147,9 +1206,13 @@ ax.axhline(y=0, color='gray', linestyle='--', alpha=0.3)
 plt.tight_layout()
 plt.savefig('figures/fig2_actual_vs_predicted.png', bbox_inches='tight')
 plt.show()
-print("Saved: figures/fig2_actual_vs_predicted.png")""")
+print("Saved: figures/fig2_actual_vs_predicted.png")
 
-code("""# ============================================================
+
+# In[ ]:
+
+
+# ============================================================
 # FIGURE 3: Residual Distribution  (Top-3 Models)
 # ============================================================
 top3_names = results_df[~results_df['Model'].str.contains('Fin Only|Naive')].head(3)['Model'].tolist()
@@ -1167,7 +1230,7 @@ for idx, name in enumerate(top3_names):
     ax.set_ylabel('Frequency')
     m = np.mean(residuals)
     s = np.std(residuals)
-    ax.text(0.05, 0.95, f'Mean={m:.6f}\\nStd={s:.6f}',
+    ax.text(0.05, 0.95, f'Mean={m:.6f}\nStd={s:.6f}',
             transform=ax.transAxes, fontsize=8, va='top',
             bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
 
@@ -1175,9 +1238,13 @@ plt.suptitle('Figure 3: Residual Distribution — Top 3 Models', y=1.02)
 plt.tight_layout()
 plt.savefig('figures/fig3_residuals.png', bbox_inches='tight')
 plt.show()
-print("Saved: figures/fig3_residuals.png")""")
+print("Saved: figures/fig3_residuals.png")
 
-code("""# ============================================================
+
+# In[ ]:
+
+
+# ============================================================
 # FIGURE 4: Training Curves  (Loss over Epochs)
 # ============================================================
 nn_models = [k for k in training_histories.keys()]
@@ -1213,9 +1280,13 @@ if n_nn > 0:
     plt.show()
     print("Saved: figures/fig4_training_curves.png")
 else:
-    print("No neural network training histories to plot.")""")
+    print("No neural network training histories to plot.")
 
-code("""# ============================================================
+
+# In[ ]:
+
+
+# ============================================================
 # FIGURE 5: Feature Importance  (Top Features per Model)
 # ============================================================
 fi_models = list(feature_importances_dict.keys())
@@ -1247,9 +1318,13 @@ if n_fi > 0:
     plt.show()
     print("Saved: figures/fig5_feature_importance.png")
 else:
-    print("No feature importance data.")""")
+    print("No feature importance data.")
 
-code("""# ============================================================
+
+# In[ ]:
+
+
+# ============================================================
 # FIGURE 6: Scatter Plot  (Actual vs Predicted, Top-3)
 # ============================================================
 fig, axes = plt.subplots(1, 3, figsize=(15, 4.5))
@@ -1266,7 +1341,7 @@ for idx, name in enumerate(top3_names):
     ax.plot(lims, lims, 'r--', alpha=0.5, label='Perfect prediction')
     ax.set_xlabel('Actual Return')
     ax.set_ylabel('Predicted Return')
-    ax.set_title(f'{name}\\n(R²={r2_score(actual, pred):.4f})', fontsize=10)
+    ax.set_title(f'{name}\n(R²={r2_score(actual, pred):.4f})', fontsize=10)
     ax.legend(fontsize=7)
     ax.set_aspect('equal', adjustable='datalim')
 
@@ -1274,9 +1349,13 @@ plt.suptitle('Figure 6: Actual vs Predicted Scatter — Top 3 Models', y=1.02)
 plt.tight_layout()
 plt.savefig('figures/fig6_scatter.png', bbox_inches='tight')
 plt.show()
-print("Saved: figures/fig6_scatter.png")""")
+print("Saved: figures/fig6_scatter.png")
 
-code("""# ============================================================
+
+# In[ ]:
+
+
+# ============================================================
 # FIGURE 7: Ablation Study Chart
 # ============================================================
 # Compare: with text vs without text for each algorithm
@@ -1336,9 +1415,13 @@ plt.suptitle('Figure 7: Ablation Study — Text Feature Contribution', y=1.02)
 plt.tight_layout()
 plt.savefig('figures/fig7_ablation.png', bbox_inches='tight')
 plt.show()
-print("Saved: figures/fig7_ablation.png")""")
+print("Saved: figures/fig7_ablation.png")
 
-code("""# ============================================================
+
+# In[ ]:
+
+
+# ============================================================
 # FIGURE 8: Performance Heatmap
 # ============================================================
 # Prepare heatmap data (main models only)
@@ -1353,9 +1436,13 @@ ax.set_yticklabels(ax.get_yticklabels(), fontsize=9)
 plt.tight_layout()
 plt.savefig('figures/fig8_heatmap.png', bbox_inches='tight')
 plt.show()
-print("Saved: figures/fig8_heatmap.png")""")
+print("Saved: figures/fig8_heatmap.png")
 
-code("""# ============================================================
+
+# In[ ]:
+
+
+# ============================================================
 # SAVE ALL RESULTS
 # ============================================================
 print("=" * 80)
@@ -1369,7 +1456,7 @@ results_df_final.to_csv('results/model_comparison.csv', index=True, index_label=
 
 # Best model highlight
 best = results_df_final.iloc[0]
-print(f"\\n*** BEST MODEL: {best['Model']} ***")
+print(f"\n*** BEST MODEL: {best['Model']} ***")
 print(f"    RMSE = {best['RMSE']:.6f}")
 print(f"    MAE  = {best['MAE']:.6f}")
 print(f"    Dir_Acc = {best['Dir_Acc']:.4f}")
@@ -1381,22 +1468,23 @@ pred_df.insert(0, 'Date', test_dates[:len(pred_df)])
 pred_df.insert(1, 'Actual', y_test[:len(pred_df)])
 pred_df.to_csv('results/all_predictions.csv', index=False)
 
-print(f"\\nFiles saved:")
+print(f"\nFiles saved:")
 print(f"  results/model_comparison.csv")
 print(f"  results/all_predictions.csv")
 print(f"  figures/fig1~fig8 (.png)")
-print(f"\\nTotal models evaluated: {len(results_df_final)}")
+print(f"\nTotal models evaluated: {len(results_df_final)}")
 print("=" * 80)
 
 # Display final table
-results_df_final[['Model', 'Text_Rep', 'RMSE', 'MAE', 'Dir_Acc', 'R2']]""")
+results_df_final[['Model', 'Text_Rep', 'RMSE', 'MAE', 'Dir_Acc', 'R2']]
 
-# ═══════════════════════════════════════════════════════════
-# SECTION 10: WALK-FORWARD VALIDATION
-# ═══════════════════════════════════════════════════════════
-md("""## 10. Walk-Forward Validation (Robustness Check)""")
 
-code("""# ============================================================
+# ## 10. Walk-Forward Validation (Robustness Check)
+
+# In[ ]:
+
+
+# ============================================================
 # Walk-Forward Validation: Expanding Window (3 folds)
 # ============================================================
 print("=" * 80)
@@ -1458,7 +1546,7 @@ for fold, (tr_idx, te_idx) in enumerate(wf_tscv.split(df)):
           f"LGB R2={wf_results['LightGBM'][-1]['R2']:.4f}  "
           f"Ridge R2={wf_results['Ridge'][-1]['R2']:.4f}")
 
-print("\\n--- Walk-Forward Summary ---")
+print("\n--- Walk-Forward Summary ---")
 for model_name, folds in wf_results.items():
     rmses = [f['RMSE'] for f in folds]
     r2s = [f['R2'] for f in folds]
@@ -1473,14 +1561,15 @@ for model_name, folds in wf_results.items():
     for f in folds:
         wf_rows.append({'Model': model_name, **f})
 pd.DataFrame(wf_rows).to_csv('results/walk_forward_validation.csv', index=False)
-print("\\nSaved: results/walk_forward_validation.csv")""")
+print("\nSaved: results/walk_forward_validation.csv")
 
-# ═══════════════════════════════════════════════════════════
-# SECTION 11: NEWS LAG ANALYSIS
-# ═══════════════════════════════════════════════════════════
-md("""## 11. News Lag Analysis""")
 
-code("""# ============================================================
+# ## 11. News Lag Analysis
+
+# In[ ]:
+
+
+# ============================================================
 # News Lag Experiment: Does t-1 day news predict t-day returns better?
 # ============================================================
 print("=" * 80)
@@ -1533,7 +1622,7 @@ for lag in [0, 1, 2]:
 
 lag_df = pd.DataFrame(lag_results)
 lag_df.to_csv('results/news_lag_analysis.csv', index=False)
-print("\\nSaved: results/news_lag_analysis.csv")
+print("\nSaved: results/news_lag_analysis.csv")
 
 # Plot lag comparison
 fig, axes = plt.subplots(1, 3, figsize=(14, 4))
@@ -1544,18 +1633,19 @@ for ax, metric, title in zip(axes, metrics, titles):
     ax.set_xlabel('News Lag (days)')
     ax.set_ylabel(metric)
     ax.set_title(title)
-plt.suptitle('Figure 9: News Lag Analysis — Does Yesterday\\'s News Predict Better?', y=1.02)
+plt.suptitle('Figure 9: News Lag Analysis — Does Yesterday\'s News Predict Better?', y=1.02)
 plt.tight_layout()
 plt.savefig('figures/fig9_news_lag.png', bbox_inches='tight')
 plt.show()
-print("Saved: figures/fig9_news_lag.png")""")
+print("Saved: figures/fig9_news_lag.png")
 
-# ═══════════════════════════════════════════════════════════
-# SECTION 12: STATISTICAL SIGNIFICANCE TESTS
-# ═══════════════════════════════════════════════════════════
-md("""## 12. Statistical Significance Tests""")
 
-code("""# ============================================================
+# ## 12. Statistical Significance Tests
+
+# In[ ]:
+
+
+# ============================================================
 # 12-1. Paired Bootstrap Test (Top-5 models)
 # ============================================================
 print("=" * 80)
@@ -1563,7 +1653,7 @@ print("STATISTICAL SIGNIFICANCE TESTS")
 print("=" * 80)
 
 def paired_bootstrap_test(actual, pred_a, pred_b, n_bootstrap=10000, seed=42):
-    \"\"\"Paired bootstrap test: H0: MSE(A) = MSE(B). Returns (delta_mse, p_value).\"\"\"
+    """Paired bootstrap test: H0: MSE(A) = MSE(B). Returns (delta_mse, p_value)."""
     rng = np.random.RandomState(seed)
     n = len(actual)
     err_a = (actual - pred_a) ** 2
@@ -1580,7 +1670,7 @@ def paired_bootstrap_test(actual, pred_a, pred_b, n_bootstrap=10000, seed=42):
     return delta_obs, count / n_bootstrap
 
 def diebold_mariano_test(actual, pred_a, pred_b):
-    \"\"\"Diebold-Mariano test for equal predictive accuracy.\"\"\"
+    """Diebold-Mariano test for equal predictive accuracy."""
     from scipy import stats
     e_a = actual - pred_a
     e_b = actual - pred_b
@@ -1603,7 +1693,7 @@ def diebold_mariano_test(actual, pred_a, pred_b):
 
 # Top-5 model pairs — Bootstrap test
 top5_models = results_df_final.head(5)['Model'].tolist()
-print("\\n--- Paired Bootstrap Test (top-5 models) ---")
+print("\n--- Paired Bootstrap Test (top-5 models) ---")
 bootstrap_rows = []
 for i in range(len(top5_models)):
     for j in range(i + 1, len(top5_models)):
@@ -1619,12 +1709,16 @@ for i in range(len(top5_models)):
 
 bootstrap_df = pd.DataFrame(bootstrap_rows)
 bootstrap_df.to_csv('results/bootstrap_significance.csv', index=False)
-print("\\nSaved: results/bootstrap_significance.csv")""")
+print("\nSaved: results/bootstrap_significance.csv")
 
-code("""# ============================================================
+
+# In[ ]:
+
+
+# ============================================================
 # 12-2. Diebold-Mariano Test (key comparisons)
 # ============================================================
-print("\\n--- Diebold-Mariano Test ---")
+print("\n--- Diebold-Mariano Test ---")
 dm_pairs = [
     # Text vs No-text comparisons
     ('TF-IDF + RF', 'RF (Fin Only)'),
@@ -1646,12 +1740,16 @@ for m_a, m_b in dm_pairs:
 
 dm_df = pd.DataFrame(dm_rows)
 dm_df.to_csv('results/diebold_mariano.csv', index=False)
-print("\\nSaved: results/diebold_mariano.csv")""")
+print("\nSaved: results/diebold_mariano.csv")
 
-code("""# ============================================================
+
+# In[ ]:
+
+
+# ============================================================
 # 12-3. Bootstrap Confidence Intervals for Best Model
 # ============================================================
-print("\\n--- Bootstrap 95% CI for metrics ---")
+print("\n--- Bootstrap 95% CI for metrics ---")
 best_model_name = results_df_final.iloc[0]['Model']
 best_preds = predictions_dict[best_model_name][:n_test]
 best_actual = y_test[:n_test]
@@ -1680,37 +1778,5 @@ ci_data = {
     'CI_Upper': [np.percentile(boot_rmse, 97.5), np.percentile(boot_r2, 97.5), np.percentile(boot_dir, 97.5)],
 }
 pd.DataFrame(ci_data).to_csv('results/bootstrap_ci.csv', index=False)
-print("Saved: results/bootstrap_ci.csv")""")
+print("Saved: results/bootstrap_ci.csv")
 
-
-# ═══════════════════════════════════════════════════════════
-# BUILD NOTEBOOK JSON
-# ═══════════════════════════════════════════════════════════
-notebook = {
-    "cells": cells,
-    "metadata": {
-        "kernelspec": {
-            "display_name": "Python 3",
-            "language": "python",
-            "name": "python3"
-        },
-        "language_info": {
-            "codemirror_mode": {"name": "ipython", "version": 3},
-            "file_extension": ".py",
-            "mimetype": "text/x-python",
-            "name": "python",
-            "nbconvert_exporter": "python",
-            "pygments_lexer": "ipython3",
-            "version": "3.7.4"
-        }
-    },
-    "nbformat": 4,
-    "nbformat_minor": 5
-}
-
-out_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "US_modeling.ipynb")
-with open(out_path, "w", encoding="utf-8") as f:
-    json.dump(notebook, f, indent=1, ensure_ascii=False)
-
-print(f"Created: {out_path}")
-print(f"Total cells: {len(cells)}  (markdown: {sum(1 for c in cells if c['cell_type']=='markdown')}, code: {sum(1 for c in cells if c['cell_type']=='code')})")

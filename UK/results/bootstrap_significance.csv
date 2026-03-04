@@ -1,0 +1,11 @@
+Model A,Model B,ΔMSE,p-value,Sig
+"GARCH(1,1)",FinBERT + Stacking,-0.00000009,0.4561,n.s.
+"GARCH(1,1)",Naive (Mean),-0.00000015,0.1540,n.s.
+"GARCH(1,1)","ARIMA(1,0,1)",-0.00000015,0.1526,n.s.
+"GARCH(1,1)",TF-IDF + Stacking,-0.00000017,0.4218,n.s.
+FinBERT + Stacking,Naive (Mean),-0.00000005,0.4575,n.s.
+FinBERT + Stacking,"ARIMA(1,0,1)",-0.00000005,0.4563,n.s.
+FinBERT + Stacking,TF-IDF + Stacking,-0.00000007,0.3052,n.s.
+Naive (Mean),"ARIMA(1,0,1)",-0.00000000,0.1227,n.s.
+Naive (Mean),TF-IDF + Stacking,-0.00000002,0.5118,n.s.
+"ARIMA(1,0,1)",TF-IDF + Stacking,-0.00000002,0.5123,n.s.

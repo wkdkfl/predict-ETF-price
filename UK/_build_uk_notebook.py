@@ -4,7 +4,8 @@ Changes:
   1. Title: QQQ -> FTSE 100 ETF
   2. Data file: US_research.csv -> UK_research.csv
   3. FinBERT max_length: 128 -> 256 (UK headlines are longer)
-  4. All model architectures, hyperparameters, and figures remain identical
+  4. FINANCIAL_COLS adapted for UK naming convention
+  5. All model architectures, hyperparameters, and figures remain identical
 """
 import json, copy, os
 
