@@ -1,7 +1,7 @@
 # 논문 퀄리티 개선 플랜
-**작성일**: 2026-06-14  
-**대상 파일**: `thesis_draft_v20.docx`  
-**현재 상태**: 실험 완료, AR_Only ablation 반영, Items 4-8 수정 완료  
+**작성일**: 2026-06-14 (검증 업데이트: 2026-06-14)
+**대상 파일**: `thesis_draft_v20.docx`
+**검증 방법**: 각 항목을 실제 논문 파라그래프에서 직접 확인 후 필요 여부 재판정
 
 ---
 
@@ -10,211 +10,150 @@
 - GARCH/HAR-RV 대비 ML 압도적 우위 (HAR-RV R²=0.034 vs RF R²=0.830)
 - AR_Only ablation으로 "뉴스 기여"를 정직하게 분리한 설계
 - 미국/영국 교차 시장 비교의 일관성
+- Multiple testing (Bonferroni), RV proxy 설명, Andersen/Corsi 인용 — 이미 완비
 
 ---
 
-## TIER 1 — 심사 통과에 필수 (제출 전 반드시 완료)
+## TIER 1 — 심사 통과에 필수 (4개, 검증 완료)
 
-### ~~T1-1. ETF 명칭 통일~~ ✅ 확인 완료 — 수정 불필요
-- **재검토 결과**: US `ETF` 컬럼 값 ~$148 (2014-01) = SPY backward-adjusted 가격과 일치
-  - `qqq_close` 컬럼은 예측 타겟이 아닌 **입력 피처**였음 (혼동 오류)
-  - 논문의 "SPY (S&P 500)" 표기는 데이터와 정확히 일치
-- **UK 소수 이슈**: UK `ETF` 컬럼 값 ~6717 = FTSE 100 **지수(index)** 레벨, ISF.L ETF 가격(~660p)과 수치가 다름
-  - 실질적 차이 없음 (상관계수 >0.99), 필요시 §3 데이터 설명에 "FTSE 100 가격 지수를 UK 예측 타겟으로 사용" 명시로 족함
+### ~~T1-1~~ ✅ 불필요 — SPY 표기 정확
+- US `ETF` 컬럼 ~$148 (2014) = SPY backward-adjusted 가격. QQQ/SOXX는 입력 피처.
+- UK 소수 이슈: `ETF`=6717은 FTSE 100 지수 레벨(ISF.L ETF 가격 ~660p와 다름). 상관계수 >0.99, 실질 무관.
 
-### T1-2. RQ3 결론 수정 (AR_Only 반영)
-- **문제**: P576(결론), P577(RQ3)에 "News_Only ≈ Full → 뉴스가 지배적" 주장이 아직 남아있음
-- **올바른 결론**:
-  - 변동성: AR 피처가 1차적 신호 (AR_Only R²=0.83-0.94), 뉴스 기여 미미
-  - 방향성: 뉴스가 유의미한 기여 (AR_Only AUC 0.724→Full 0.749 US, 0.780→0.832 UK)
-- **수정 대상 단락**: P576, P577, P579, P581 (결론 섹션)
-- **난이도**: 중간 (논리 구조 변경)
+---
 
-### T1-3. Table 번호 순서 정렬
-- **문제**: 표 번호가 `1, 2, 2a, 2b, 2c, 3, 3a ... 11c, 11d ... 8`로 완전히 뒤섞임
-- **올바른 순서**: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 (서브테이블은 a/b 허용하되 순서 준수)
-- **방법**: Word에서 Ctrl+H로 일괄 수정 또는 python-docx 스크립트
-- **난이도**: 낮음 (기계적 작업)
+### T1-2. RQ3/RQ4 결론 수정 — AR_Only 반영 ❌ 미수정
+- **확인**: P576 아직도 "News_Only 피처군만으로도 Full의 90%(변동성)" 주장
+- **확인**: P577 아직도 "양 시장 모두에서 News_Only가 Full에 근접" 주장
+- **실제 결과**: AR_Only만으로 변동성 R²=0.83-0.94 달성. 뉴스는 방향성에서만 의미있는 기여.
+- **수정 내용**:
+  - P576: "뉴스 지배" → "AR 피처가 변동성의 1차 드라이버; 뉴스는 방향성에 기여"
+  - P577: "News_Only ≈ Full" → "AR_Only ≈ Full(변동성), AR+News > AR_Only(방향성)"
+  - P579, P581: 결론 문장에서 뉴스 단독 기여 과장 표현 완화
+- **난이도**: 중간 | **시간**: 2-3시간
 
-### T1-4. Figure TOC 업데이트
-- **문제**: 그림 9-14가 목차의 그림 목록에 없음
-- **방법**: 논문 내 그림 목록 섹션에 Figure 9-14 제목 추가
-- **난이도**: 낮음
+---
 
-### T1-5. Chapter 4/5 중복 해소
-- **문제**: §4.5-4.7(결과 수치 제시) vs §5.1-5.7(동일 결과 재해석) — 텍스트가 거의 동일
+### T1-3. 표 번호 순서 정렬 ❌ 혼란 심각
+- **확인**: `1, 2, 2a, 2b, 2c, 3, 3a~3d, 4, 5a, 5, 6, 7, 11c, 11d, 11e, 11f, 8, 9, 10, 11, 12, 13, 14, 15, 11g`
+- **문제점**:
+  - 5a가 5보다 먼저 등장
+  - 11c/11d/11e/11f가 표 7과 8 사이에 등장 (11이 8보다 앞에!)
+  - 11g가 15 뒤에 등장
+- **수정 방법**: Word에서 Ctrl+H 또는 python-docx 스크립트로 일괄 교체
+- **난이도**: 낮음 | **시간**: 1시간
+
+---
+
+### T1-4. 그림 목차(TOC) 업데이트 ❌ 6개 누락
+- **확인**: 그림 TOC에는 1-8만 있고, 본문에는 2,3,4,6,7,8,9,10,11,12,13,14 존재
+- **누락**: 그림 9, 10, 11, 12, 13, 14 (총 6개)
+- **추가 확인 필요**: 그림 1, 5가 TOC에는 있으나 본문 `<그림 N>` 태그 없음 (표지 그림이거나 누락)
+- **방법**: 논문 그림 목록 섹션에 그림 9-14 제목 직접 추가
+- **난이도**: 낮음 | **시간**: 30분
+
+---
+
+### T1-5. Chapter 4/5 중복 해소 ❌ 실제로 겹침
+- **확인**:
+  - P409(Ch4.5): "BiLSTM과 Transformer 기반 모델은...TF-IDF+BiLSTM(R²=-0.248)..."
+  - P488(Ch5.1): 동일 문장 그대로 반복
+  - P406(Ch4.5) 수치 → P485(Ch5.1) 동일 수치 재서술
 - **해결 전략**:
-  - §4.5-4.7: **표와 수치만 남기고** 해석 문장 삭제 (예: "이는 ~를 의미한다" 류 문장 삭제)
-  - §5.1-5.7: 수치 반복 없이 **의미·함의·비교** 위주로만 작성
-- **예시**: §4.5에서 "RandomForest R²=0.026, p>0.25로 EMH와 일치한다" 종류 문장 → §5.1로 이동
-- **난이도**: 높음 (주의 깊은 수동 편집 필요)
+  - §4.5-4.7: 표 + 핵심 수치만 남기고, "이는 ~를 의미한다" 형태의 해석 문장 전부 삭제
+  - §5.1-5.7: 수치 반복 없이 해석·비교·함의만 서술
+- **주의**: Ch5.1(P492)의 Bonferroni 보정 설명은 Ch4에 없는 추가 내용 → 유지
+- **난이도**: 높음 (수동 편집) | **시간**: 반나절
 
 ---
 
-## TIER 2 — 논문 완성도 향상 (가능하면 완료)
+## TIER 2 — 완성도 향상 (3개로 압축, 나머지 이미 완료)
 
-### T2-1. 그림 품질 개선 및 다양화
-- **문제**: 현재 그림이 실험 출력 결과 플롯만 존재, 설명적 그림 부족
-- **추가해야 할 그림**:
-  1. **파이프라인 전체 흐름도** (데이터 수집 → FinBERT → Feature Engineering → Models → Evaluation)
-     - `fig_pipeline.png` 파일이 있으나 논문 내 삽입 확인 필요
-  2. **Ablation 막대그래프** (5그룹 × 2시장 × 변동성+방향성) — 새로운 AR_Only 결과 반영
-  3. **예측값 vs 실제값 시계열 플롯** (Test 구간의 predicted vs actual volatility, 월별)
-  4. **GARCH vs ML 비교 막대그래프** (논문에 시각적 증거 추가)
-  5. **Walk-Forward fold별 성능 추이 선그래프** (시간에 따른 모델 안정성)
-  6. **FinBERT 임베딩 t-SNE 시각화** (감성 클러스터 분포)
-- **방법**: matplotlib/seaborn으로 생성, `_generate_figures.py` 스크립트 작성
-- **난이도**: 중간
+### T2-1. 그림 추가 — 논증 시각화
+- **현재 상태**: 그림 1-14 있으나 실험 출력 위주, 논증용 설명 그림 부족
+- **추가 권장 그림**:
+  1. **Ablation 5그룹 비교 막대그래프** (AR_Only 결과 반영, §4.8.8에 삽입)
+     — 현재 그림 9는 구 3그룹 ablation. AR_Only 추가 후 재생성 필요
+  2. **GARCH vs HAR-RV vs ML 비교 막대그래프** (§4.8.6에 삽입)
+     — 논문에 GARCH 비교 수치가 있지만 시각화 없음
+  3. **예측값 vs 실제값 시계열** (Test 구간, §4.8.6에 삽입)
+     — "R²=0.83이 어떻게 생겼는가"를 직관적으로 보여줌
+- **방법**: `_generate_figures_v2.py` 작성, matplotlib
+- **난이도**: 중간 | **시간**: 반나절
 
-### T2-2. SHAP 기반 피처 중요도 분석 추가
-- **문제**: 현재 built-in feature importance(XGBoost gain)만 사용 — biased, unstable
-- **개선**: SHAP (SHapley Additive exPlanations) 값 계산
-  - 뉴스 피처 vs AR 피처 vs 금융 피처의 SHAP 기여 비교
-  - 시장별 (US vs UK) SHAP 비교
-  - AR_Only ablation 결과와 SHAP 해석의 일관성 확인
-- **방법**: `pip install shap`, XGBoost 모델에 `shap.TreeExplainer` 적용
-- **코드 위치**: `_run_enhanced_models_v3.py` 또는 별도 `_shap_analysis.py`
-- **난이도**: 중간
+---
 
-### T2-3. Realized Volatility 프록시 정당화
-- **문제**: `|r_t|`(절대 수익률)을 realized volatility proxy로 사용 — 업계 표준은 5-min RV 또는 `√(Σr²)`
-- **개선 방법**:
-  - §3 또는 §4.8.4에 "|r_t| 사용 이유" 명시: "일별 데이터만 접근 가능한 환경에서 가장 널리 쓰이는 daily RV proxy (Andersen et al., 2003)"
-  - 또는 `high-low range estimator` (Garman-Klass) 추가 비교
-  - 주석에 "`target_vol = |r_{t+1}|` is a noisy but accessible proxy for realized volatility" 추가
-- **난이도**: 낮음 (문헌 추가 + 설명 문장)
+### T2-2. Hansen & Lunde (2005) 참고문헌 추가
+- **확인**: Andersen [41] ✅, Corsi [44] ✅, GARCH(Bollerslev [3]) ✅ 이미 있음
+- **누락**: Hansen, P. R., & Lunde, A. (2005). "A forecast comparison of volatility models." *Journal of Applied Econometrics*
+  - P452에서 이미 본문 인용 중 ("Hansen & Lunde, 2005") → 참고문헌 목록에 없음
+- **방법**: 참고문헌 섹션에 [46] 또는 적절한 번호로 추가
+- **난이도**: 낮음 | **시간**: 10분
 
-### T2-4. Multiple Testing 보정 언급
-- **문제**: 21개 모델 × 2 시장 × 여러 지표를 비교하면서 multiple testing correction 없음
-- **개선**: 
-  - 주석 또는 한계 절에 "다수 모델 비교의 multiple testing 문제를 인식하며, Bonferroni 보정 적용 시 가장 유의한 결과도 임계값 이하임을 확인" 추가
-  - 또는 실제로 Bonferroni 보정 p-value 보고
-- **난이도**: 낮음
+---
 
-### T2-5. 결론 부분 AR_Only 완전 반영
-- **현재 P579/P581 결론**: "뉴스 텍스트와 금융지표를 결합한 프레임워크가 높은 R² 달성" — 뉴스 기여를 과대 서술
-- **올바른 결론 구조**:
-  ```
-  1. 변동성: 가격 AR 패턴이 1차 드라이버 (HAR-RV 대비 ML 우위는 AR 피처의 풍부함에서)
-  2. 방향성: 뉴스 감성이 AR 베이스라인 대비 통계적으로 유의한 향상 제공
-  3. 공통: 전통 GARCH/HAR-RV 대비 ML의 명확한 우위 (R² +0.80 차이)
-  ```
-- **난이도**: 중간
+### T2-3. EMH 표현 내부 불일치 수정
+- **확인**: P442에 "수익률 수준이 어떤 공개 정보 집합으로도...EMH의 **강한 형태**와 정합한다"
+- **문제**: "공개 정보 집합 = 준강형(semi-strong form)" 정의이나 "강한 형태(strong form)" 라벨 사용 — 내부 모순
+  - 강한 형태(strong form) = 사적 정보도 포함한 EMH → 우리 연구와 무관
+  - 준강형(semi-strong form) = 공개 정보 기반 → 우리 연구에 정확히 해당
+- **수정**: "EMH의 강한 형태" → "EMH의 준강형(semi-strong form)"
+- **난이도**: 낮음 | **시간**: 5분
 
-### T2-6. 참고문헌 보완
-- **누락된 중요 문헌**:
-  - Hansen, P. R., & Lunde, A. (2005). A forecast comparison of volatility models: Does anything beat a GARCH(1,1)? *Journal of Applied Econometrics*
-  - Corsi, F. (2009). A simple approximate long-memory model of realized volatility. *Journal of Financial Econometrics* ← 이미 [44]로 인용되어 있을 수 있음
-  - Andersen, T. G., Bollerslev, T., Diebold, F. X., & Labys, P. (2003). Modeling and forecasting realized volatility. *Econometrica*
-  - Lundberg, S., & Lee, S. I. (2017). A unified approach to interpreting model predictions (SHAP). *NeurIPS* ← T2-2 추가 시 필요
-- **방법**: 참고문헌 섹션에 추가, 본문에서 인용
+---
+
+## ~~제거된 항목~~ (직접 확인 후 불필요 판정)
+
+| 항목 | 제거 이유 |
+|---|---|
+| ~~T2-3 RV proxy 정당화~~ | P442에 `\|r_{t+1}\|` 프록시 명시 + Andersen [41] 이미 인용 |
+| ~~T2-4 Multiple testing 보정~~ | P492에 Bonferroni 보정 적용 이미 서술 |
+| ~~T2-2 SHAP 분석~~ | P465-470에 feature importance 섹션 + 그림 11-12 이미 존재. SHAP는 선택사항. |
+| ~~T2-5 결론 AR_Only 반영~~ | T1-2와 동일 작업, 중복 제거 |
+| ~~T1-1 ETF 명칭~~ | SPY 표기 정확. QQQ는 입력 피처. |
 
 ---
 
 ## TIER 3 — 선택적 향상 (시간 여유 시)
 
-### T3-1. 실거래 전략 시뮬레이션 추가
-- **내용**: 방향성 예측 AUC=0.75-0.84를 실제 Long/Short 전략으로 변환
-  - 예측 방향에 따라 매수/매도 시그널 생성
-  - 연간 수익률, 최대낙폭(MDD), Sharpe ratio 계산
-  - Buy-and-Hold 대비 초과수익 측정
-- **목적**: "실무 활용 가능성" 절(§5.10.4)의 주장에 실증적 근거 제공
-- **주의**: 거래비용 포함 필수 (없으면 심사위원 지적)
-- **난이도**: 높음
-
-### T3-2. 추가 ETF 검증 (외부 타당성)
-- **문제**: US는 QQQ(NASDAQ-100), UK는 ISF(FTSE 100) — 각각 1개 ETF만 사용
-- **개선**: 
-  - US: SPY(S&P 500) 추가 또는 교체
-  - UK: VUKE(Vanguard FTSE 100) 추가
-  - 결과 일관성 확인 → 외부 타당성(external validity) 강화
-- **난이도**: 중간 (데이터 재수집 + 재실행 필요)
-
-### T3-3. 텍스트 감성의 시장 영향 시차 분석 심화
-- **현재**: 뉴스 t-0 적용(당일 뉴스를 당일 데이터로), 금융 t-1
-- **추가 분석**: lag 0, 1, 2, 3일로 뉴스 시차를 바꿔가며 AUC 변화 측정
-  - "뉴스가 시장에 반영되는 시차"를 데이터로 규명
-  - §5.5 "뉴스 시차 효과 분석" 절 강화
-- **난이도**: 낮음 (코드 수정 소폭)
-
-### T3-4. Stacking Ensemble 메타러너 개선
-- **현재**: Ridge (회귀) / Logistic (분류) 메타러너
-- **개선**: 
-  - 메타러너도 XGBoost로 교체하여 비선형 앙상블 가능성 탐색
-  - Out-of-fold predictions로 메타 피처 생성 (현재 KFold shuffle=False 사용 — 시간적 순서 미보장)
-  - TimeSeriesSplit으로 교체하여 stacking의 시간 누출 완전 차단
-- **난이도**: 중간
+| 항목 | 내용 | 시간 |
+|---|---|---|
+| T3-1 실거래 전략 시뮬레이션 | AUC 0.75-0.84 → Long/Short 전략 수익률·Sharpe 계산 | 하루 |
+| T3-2 추가 ETF 검증 | SPY 외 1-2개 ETF로 외부 타당성 확인 | 2-3일 |
+| T3-3 SHAP 분석 | TreeExplainer로 built-in importance 보완 | 반나절 |
+| T3-4 뉴스 시차 심화 | lag 0-3일 변화에 따른 AUC 변화 측정 | 반나절 |
 
 ---
 
-## 수정 우선순위 로드맵
+## 최종 실행 순서 (실제 소요 시간 기준)
 
 ```
-[즉시 — 제출 전 필수]
-T1-1 ETF 명칭 통일 (1시간)
-T1-2 RQ3/결론 AR_Only 반영 (3시간)
-T1-3 Table 번호 정렬 (1시간)
-T1-4 Figure TOC 업데이트 (30분)
-T1-5 Chapter 4/5 중복 해소 (반나절)
+1일차 (필수)
+  T1-4  그림 목차 추가          (30분) ← 가장 쉬움, 먼저 처리
+  T2-2  Hansen & Lunde 인용 추가  (10분)
+  T2-3  EMH semi-strong 수정     (5분)
+  T1-3  표 번호 정렬             (1시간)
+  T1-2  RQ3/결론 수정           (2-3시간)
 
-[제출 전 권장]
-T2-1 그림 추가/개선 (하루)
-T2-2 SHAP 분석 추가 (반나절)
-T2-3 RV proxy 정당화 문장 추가 (30분)
-T2-4 Multiple testing 보정 언급 (30분)
-T2-5 결론 AR_Only 완전 반영 (1시간)
-T2-6 참고문헌 보완 (1시간)
-
-[여유 있을 때]
-T3-1 거래 전략 시뮬레이션
-T3-2 추가 ETF 검증
-T3-3 뉴스 시차 분석 심화
-T3-4 Stacking 메타러너 개선
+2일차 (권장)
+  T1-5  Chapter 4/5 중복 해소   (반나절)
+  T2-1  그림 추가              (반나절)
 ```
 
 ---
 
-## 그림 추가 가이드 (T2-1 상세)
-
-### 추가 필요 그림 목록
-
-| 번호 | 제목 | 내용 | 삽입 위치 |
-|---|---|---|---|
-| Fig A | 연구 파이프라인 전체 흐름도 | 데이터→NLP→FE→모델→검증 박스 다이어그램 | §3 서두 |
-| Fig B | AR_Only Ablation 결과 비교 | 5그룹 × vol R² + dir AUC 막대그래프 | §4.8.8 |
-| Fig C | GARCH vs HAR-RV vs ML 비교 | R² 비교 막대그래프 (전통 vs ML) | §4.8.6 |
-| Fig D | 예측값 vs 실제값 시계열 | Test 구간 predicted/actual volatility | §4.8.6 |
-| Fig E | Walk-Forward fold별 성능 | 시간축에 따른 AUC 변화 선그래프 | §4.4 |
-
-### 코드 참조
-```python
-# 실행 방법
-.venv\Scripts\python.exe _generate_diagrams.py  # 기존 다이어그램 생성 스크립트
-# 새 그림은 _generate_figures_v2.py 작성 권장
-```
-
----
-
-## 현재 논문 버전 기록
-
-| 버전 | 주요 변경 |
-|---|---|
-| v19 | 원본 (AR 피처 문제 포함) |
-| v20 | Items 4-8 수정, AR_Only ablation 해석 반영, GARCH 비교 추가 |
-| **v21 목표** | T1-1~T1-5 완료 (ETF명칭, RQ3결론, 표번호, 챕터중복 해소) |
-| **v22 목표** | T2-1~T2-6 완료 (그림, SHAP, 참고문헌) |
-
----
-
-## 심사 예상 질문 대비 현황
+## 심사 예상 질문 대비 현황 (업데이트)
 
 | 질문 | 현재 준비 상태 |
 |---|---|
-| "왜 GARCH 안 쓰고 ML?" | ✅ GARCH R²=-0.21 실험 결과 있음 |
-| "뉴스가 진짜 도움됨?" | ✅ AR_Only ablation으로 방향성+0.025-0.052 AUC 증명 |
-| "Optuna에서 test leakage?" | ✅ Train+Val만 사용 명시됨 |
-| "R²=0.83이 너무 높지 않나?" | ⚠️ AR 피처의 변동성 클러스터링으로 설명 가능하나 문장 보강 필요 |
-| "ETF가 SPY인가 QQQ인가?" | ❌ T1-1 수정 필요 |
-| "결론에서 뉴스 기여 과장?" | ⚠️ T1-2, T2-5 수정 필요 |
-| "그림이 왜 이렇게 적나?" | ⚠️ T2-1 그림 추가 필요 |
-| "Multiple testing 했나?" | ⚠️ T2-4 언급 추가 필요 |
+| "왜 GARCH 안 쓰고 ML?" | ✅ GARCH R²=-0.21, HAR-RV R²=0.03 vs ML R²=0.83 |
+| "뉴스가 진짜 도움됨?" | ✅ 변동성은 AR 지배, 방향성은 AUC +0.025-0.052 증명 |
+| "Optuna에서 test leakage?" | ✅ Train+Val만 사용 명시 |
+| "R²=0.83이 너무 높지 않나?" | ✅ AR 피처의 변동성 클러스터링(HAR-RV 문헌과 일치) |
+| "SPY인가 QQQ인가?" | ✅ ETF 컬럼=SPY, QQQ는 입력 피처 |
+| "News_Only가 왜 Full만큼 높나?" | ✅ AR_Only ablation으로 AR 기여 분리됨 |
+| "결론에서 뉴스 기여 과장?" | ⚠️ T1-2 수정 필요 |
+| "표 번호 순서가 이상한데?" | ⚠️ T1-3 수정 필요 |
+| "EMH 강한 형태 vs 준강형?" | ⚠️ T2-3 수정 필요 |
+| "multiple testing 고려?" | ✅ P492 Bonferroni 이미 언급 |
+| "RV 프록시 왜 \|r_t\|?" | ✅ P442 설명 + Andersen 인용 |
