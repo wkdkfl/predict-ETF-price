@@ -1,0 +1,9 @@
+market,task,baseline,vs,DM_stat,p_value,Full_wins (p<0.05)
+UK,vol,AR_Only,Full,-4.854,0.0,False
+UK,dir,AR_Only,Full,0.493,0.6228,False
+UK,vol,Financial_Only,Full,5.254,0.0,True
+UK,dir,Financial_Only,Full,1.431,0.1538,False
+UK,vol,News_Pure,Full,2.044,0.042,True
+UK,dir,News_Pure,Full,2.887,0.0042,True
+UK,vol,AR+News,Full,-1.859,0.0642,False
+UK,dir,AR+News,Full,-0.633,0.5271,False
