@@ -1,0 +1,11 @@
+Model A,Model B,ΔMSE,p-value,Sig
+FinBERT + LightGBM,Weighted Blending (Top-3),-0.00000015,0.2009,n.s.
+FinBERT + LightGBM,Sentiment + LightGBM,-0.00000029,0.1468,n.s.
+FinBERT + LightGBM,LightGBM (Fin Only),-0.00000055,0.0841,*
+FinBERT + LightGBM,RF (Fin Only),-0.00000073,0.2178,n.s.
+Weighted Blending (Top-3),Sentiment + LightGBM,-0.00000014,0.2279,n.s.
+Weighted Blending (Top-3),LightGBM (Fin Only),-0.00000040,0.1112,n.s.
+Weighted Blending (Top-3),RF (Fin Only),-0.00000058,0.2681,n.s.
+Sentiment + LightGBM,LightGBM (Fin Only),-0.00000026,0.2431,n.s.
+Sentiment + LightGBM,RF (Fin Only),-0.00000044,0.3061,n.s.
+LightGBM (Fin Only),RF (Fin Only),-0.00000018,0.4022,n.s.

@@ -1,0 +1,11 @@
+Model A,Model B,ΔMSE,p-value,Sig
+TF-IDF + RF,RF (Fin Only),-0.00000005,0.4250,n.s.
+TF-IDF + RF,Linear Regression,-0.00000258,0.2986,n.s.
+TF-IDF + RF,FinBERT + LightGBM,-0.00000351,0.2818,n.s.
+TF-IDF + RF,Weighted Blending (Top-3),-0.00000367,0.2863,n.s.
+RF (Fin Only),Linear Regression,-0.00000253,0.3102,n.s.
+RF (Fin Only),FinBERT + LightGBM,-0.00000347,0.2913,n.s.
+RF (Fin Only),Weighted Blending (Top-3),-0.00000363,0.2965,n.s.
+Linear Regression,FinBERT + LightGBM,-0.00000094,0.4278,n.s.
+Linear Regression,Weighted Blending (Top-3),-0.00000110,0.4269,n.s.
+FinBERT + LightGBM,Weighted Blending (Top-3),-0.00000016,0.4299,n.s.

@@ -1,0 +1,11 @@
+Model A,Model B,ΔMSE,p-value,Sig
+Weighted Blending (Top-3),TF-IDF + LightGBM,-0.00000006,0.4286,n.s.
+Weighted Blending (Top-3),Sentiment + LightGBM,-0.00000007,0.4410,n.s.
+Weighted Blending (Top-3),"GARCH(1,1)",-0.00000013,0.4454,n.s.
+Weighted Blending (Top-3),LightGBM (Fin Only),-0.00000025,0.2483,n.s.
+TF-IDF + LightGBM,Sentiment + LightGBM,-0.00000001,0.5008,n.s.
+TF-IDF + LightGBM,"GARCH(1,1)",-0.00000007,0.5082,n.s.
+TF-IDF + LightGBM,LightGBM (Fin Only),-0.00000019,0.3553,n.s.
+Sentiment + LightGBM,"GARCH(1,1)",-0.00000006,0.4703,n.s.
+Sentiment + LightGBM,LightGBM (Fin Only),-0.00000018,0.2795,n.s.
+"GARCH(1,1)",LightGBM (Fin Only),-0.00000012,0.3663,n.s.

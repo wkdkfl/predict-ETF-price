@@ -1,0 +1,11 @@
+Model A,Model B,ΔMSE,p-value,Sig
+Linear Regression,LightGBM (Fin Only),-0.00000176,0.4862,n.s.
+Linear Regression,TF-IDF + RF,-0.00000227,0.4634,n.s.
+Linear Regression,RF (Fin Only),-0.00000251,0.4546,n.s.
+Linear Regression,TF-IDF + LightGBM,-0.00000291,0.4489,n.s.
+LightGBM (Fin Only),TF-IDF + RF,-0.00000052,0.4141,n.s.
+LightGBM (Fin Only),RF (Fin Only),-0.00000075,0.3800,n.s.
+LightGBM (Fin Only),TF-IDF + LightGBM,-0.00000116,0.0679,*
+TF-IDF + RF,RF (Fin Only),-0.00000024,0.2902,n.s.
+TF-IDF + RF,TF-IDF + LightGBM,-0.00000064,0.4060,n.s.
+RF (Fin Only),TF-IDF + LightGBM,-0.00000040,0.4420,n.s.

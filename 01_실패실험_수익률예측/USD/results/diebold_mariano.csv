@@ -1,0 +1,5 @@
+Model A,Model B,DM Stat,p-value,Sig
+TF-IDF + RF,RF (Fin Only),-0.1957,0.8448,n.s.
+TF-IDF + LightGBM,LightGBM (Fin Only),-0.1783,0.8585,n.s.
+FinBERT + LightGBM,LightGBM (Fin Only),-1.0502,0.2936,n.s.
+TF-IDF + Stacking,LightGBM (Fin Only),0.6281,0.5299,n.s.

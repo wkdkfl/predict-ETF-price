@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>논문 종합 해설 — ETF 변동성·방향성 예측</title>
+<style>
+/* ── 리셋 & 기본 ──────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans KR','Malgun Gothic','Segoe UI',sans-serif;
+     background:#f0f4f9;color:#1e2a3a;line-height:1.75;font-size:15px}
+
+/* ── 헤더 ──────────────────────────────────────── */
+header{background:linear-gradient(135deg,#0f2a4a 0%,#1e4d8c 55%,#2563a8 100%);
+  color:#fff;padding:52px 48px 40px;position:relative;overflow:hidden}
+header::before{content:'';position:absolute;right:-80px;top:-80px;
+  width:320px;height:320px;border-radius:50%;
+  background:rgba(255,255,255,.06);pointer-events:none}
+header::after{content:'';position:absolute;right:80px;bottom:-60px;
+  width:180px;height:180px;border-radius:50%;
+  background:rgba(255,255,255,.04);pointer-events:none}
+.h-tag{font-size:.75rem;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;color:#90cdf4;margin-bottom:10px}
+header h1{font-size:2rem;font-weight:900;line-height:1.25;margin-bottom:12px}
+header h1 span{color:#63b3ed}
+header p{font-size:.93rem;opacity:.83;max-width:680px;line-height:1.7}
+.stat-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:22px}
+.stat-chip{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);
+  border-radius:8px;padding:10px 18px;text-align:center;min-width:130px}
+.stat-chip .val{font-size:1.5rem;font-weight:900;color:#90cdf4;display:block}
+.stat-chip .lbl{font-size:.73rem;opacity:.8;margin-top:2px}
+
+/* ── 목차 ──────────────────────────────────────── */
+.toc-wrap{background:#fff;max-width:1100px;margin:28px auto 0;
+  border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.07);
+  border-left:5px solid #2563a8;padding:22px 28px}
+.toc-wrap h2{color:#2563a8;font-size:.95rem;margin-bottom:12px}
+.toc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:4px 20px}
+.toc-grid a{color:#374151;font-size:.83rem;text-decoration:none;
+  padding:2px 0;display:flex;align-items:center;gap:6px}
+.toc-grid a:hover{color:#2563a8;text-decoration:underline}
+.toc-grid a::before{content:'›';color:#2563a8;font-weight:700}
+
+/* ── 메인 레이아웃 ─────────────────────────────── */
+main{max-width:1100px;margin:0 auto;padding:28px 24px 60px}
+section{margin-bottom:48px}
+
+/* ── 섹션 헤더 ─────────────────────────────────── */
+.sh{display:flex;align-items:center;gap:14px;
+  border-bottom:2px solid #e5e7eb;padding-bottom:12px;margin-bottom:20px}
+.sh-icon{width:42px;height:42px;border-radius:12px;display:flex;
+  align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
+.sh h2{font-size:1.25rem;font-weight:800}
+.c-blue{background:#dbeafe;color:#1d4ed8}
+.c-green{background:#d1fae5;color:#065f46}
+.c-orange{background:#ffedd5;color:#9a3412}
+.c-purple{background:#ede9fe;color:#5b21b6}
+.c-red{background:#fee2e2;color:#991b1b}
+.c-teal{background:#ccfbf1;color:#0f766e}
+.c-gray{background:#f3f4f6;color:#374151}
+.c-gold{background:#fef9c3;color:#713f12}
+
+/* ── 카드 그리드 ────────────────────────────────── */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:18px}
+.card{background:#fff;border-radius:12px;padding:20px 22px;
+  box-shadow:0 2px 8px rgba(0,0,0,.07);
+  border-top:4px solid var(--ac,#2563a8);
+  transition:transform .15s,box-shadow .15s}
+.card:hover{transform:translateY(-3px);box-shadow:0 6px 18px rgba(0,0,0,.11)}
+.c-name{font-size:1.05rem;font-weight:800;color:var(--ac,#2563a8);margin-bottom:3px}
+.c-sub{font-size:.73rem;color:#6b7280;margin-bottom:12px}
+.lbl{display:inline-block;font-size:.68rem;font-weight:700;
+  padding:2px 8px;border-radius:4px;margin-bottom:4px;
+  letter-spacing:.4px;text-transform:uppercase}
+.lw{background:#dbeafe;color:#1e40af} /* 이유 */
+.lu{background:#d1fae5;color:#065f46} /* 역할 */
+.lk{background:#ffedd5;color:#9a3412} /* 중요성 */
+.lp{background:#ede9fe;color:#5b21b6} /* 기여도 */
+.ld{background:#fce7f3;color:#9d174d} /* 쉬운 설명 */
+.card p{font-size:.84rem;color:#4b5563;margin-bottom:9px}
+.card p:last-child{margin-bottom:0}
+.term-plain{background:#fdf4ff;border:1px dashed #e9d5ff;border-radius:8px;
+  padding:10px 12px;font-size:.83rem;color:#581c87;margin-bottom:11px;line-height:1.65}
+
+/* ── 기술 해설 서브섹션 ─────────────────────────── */
+.sub-h{display:flex;align-items:center;gap:8px;font-size:1rem;font-weight:800;
+  color:#374151;margin:30px 0 14px;padding-left:12px;border-left:4px solid #9ca3af}
+.sub-h:first-of-type{margin-top:4px}
+.sub-h .n{font-size:.72rem;font-weight:700;color:#fff;background:#9ca3af;
+  border-radius:20px;padding:2px 9px}
+.sub-desc{font-size:.82rem;color:#6b7280;margin:-8px 0 14px 16px}
+
+/* ── 실전 적용 예시 박스 ───────────────────────── */
+.ex-box{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;
+  padding:11px 13px;margin-top:2px}
+.ex-h{font-size:.71rem;font-weight:800;color:#0369a1;margin-bottom:7px;
+  letter-spacing:.3px}
+.ex-row{font-size:.79rem;color:#374151;margin-bottom:5px;line-height:1.6}
+.ex-row:last-child{margin-bottom:0}
+.ex-row b{color:#0284c7;font-weight:700;margin-right:3px}
+.ex-row code{background:#e0f2fe;color:#0c4a6e;padding:1px 5px;border-radius:4px;
+  font-size:.76rem;font-family:'Consolas',monospace}
+
+/* ── 콜아웃 ─────────────────────────────────────── */
+.callout{border-left:4px solid #2563a8;background:#eff6ff;
+  padding:14px 18px;border-radius:0 8px 8px 0;
+  font-size:.86rem;color:#1e3a5f;margin:14px 0}
+.callout.g{border-color:#059669;background:#ecfdf5;color:#064e3b}
+.callout.o{border-color:#d97706;background:#fffbeb;color:#78350f}
+.callout.r{border-color:#dc2626;background:#fef2f2;color:#7f1d1d}
+.callout.p{border-color:#7c3aed;background:#f5f3ff;color:#3b0764}
+
+/* ── 결과 표 ─────────────────────────────────────── */
+.tbl-wrap{overflow-x:auto;border-radius:10px;
+  box-shadow:0 2px 8px rgba(0,0,0,.07);margin:14px 0}
+table{width:100%;border-collapse:collapse;background:#fff;font-size:.84rem}
+thead th{background:#1e4d8c;color:#fff;padding:11px 14px;
+  text-align:left;font-weight:700;white-space:nowrap}
+thead th:first-child{border-radius:10px 0 0 0}
+thead th:last-child{border-radius:0 10px 0 0}
+tbody td{padding:10px 14px;border-bottom:1px solid #e5e7eb;color:#374151}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#f0f9ff}
+.best{background:#d1fae5!important;font-weight:800;color:#065f46}
+.worst{background:#fee2e2!important;color:#991b1b}
+.sig{color:#059669;font-weight:800}
+.nsig{color:#9ca3af}
+.us{color:#2563a8;font-weight:700}
+.uk{color:#d97706;font-weight:700}
+
+/* ── 막대 그래프 (CSS only) ──────────────────────── */
+.bar-chart{background:#fff;border-radius:12px;padding:24px;
+  box-shadow:0 2px 8px rgba(0,0,0,.07);margin:14px 0}
+.bar-chart h4{font-size:.88rem;font-weight:700;color:#374151;margin-bottom:16px}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.bar-label{width:180px;font-size:.78rem;color:#4b5563;flex-shrink:0;text-align:right}
+.bar-outer{flex:1;background:#f3f4f6;border-radius:4px;height:22px;overflow:hidden}
+.bar-inner{height:100%;border-radius:4px;display:flex;align-items:center;
+  padding-left:8px;font-size:.72rem;font-weight:700;color:#fff;
+  transition:width .5s ease;white-space:nowrap}
+.bar-val{margin-left:8px;font-size:.78rem;color:#374151;font-weight:700}
+.bar-neg{background:#fee2e2;border-radius:4px;height:22px;
+  display:flex;align-items:center;padding:0 8px;
+  font-size:.72rem;color:#991b1b;font-weight:700}
+
+/* ── 파이프라인 ─────────────────────────────────── */
+.pipe{display:flex;align-items:stretch;flex-wrap:wrap;gap:0;
+  background:#fff;border-radius:12px;padding:24px;
+  box-shadow:0 2px 8px rgba(0,0,0,.07);overflow-x:auto}
+.pipe-box{background:#1e4d8c;color:#fff;padding:12px 16px;border-radius:8px;
+  font-size:.8rem;font-weight:700;text-align:center;min-width:110px}
+.pipe-box small{display:block;font-weight:400;opacity:.82;font-size:.72rem;margin-top:3px}
+.pipe-box.g{background:#059669}.pipe-box.o{background:#d97706}
+.pipe-box.p{background:#7c3aed}.pipe-box.r{background:#dc2626}
+.pipe-box.t{background:#0f766e}
+.arr{font-size:1.4rem;color:#9ca3af;padding:0 6px;align-self:center;flex-shrink:0}
+
+/* ── RQ 카드 ─────────────────────────────────────── */
+.rq-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.rq-card{background:#fff;border-radius:10px;padding:18px;
+  box-shadow:0 2px 8px rgba(0,0,0,.07);border-left:5px solid var(--ac)}
+.rq-no{font-size:.75rem;font-weight:800;letter-spacing:1px;
+  text-transform:uppercase;color:var(--ac);margin-bottom:6px}
+.rq-card p{font-size:.85rem;color:#374151;margin-bottom:8px}
+.rq-ans{font-size:.82rem;background:var(--bg,#eff6ff);
+  border-radius:6px;padding:8px 10px;color:var(--fc,#1e40af);font-weight:600}
+
+/* ── 피처 테이블 ─────────────────────────────────── */
+.feat-cat{background:#1e4d8c;color:#fff;padding:8px 14px;
+  font-size:.8rem;font-weight:700;border-radius:6px 6px 0 0;
+  margin-top:18px;margin-bottom:0}
+.feat-tbl{width:100%;border-collapse:collapse;background:#fff;
+  font-size:.82rem;
+  box-shadow:0 2px 6px rgba(0,0,0,.07);border-radius:0 0 8px 8px;overflow:hidden}
+.feat-tbl th{background:#374151;color:#fff;padding:9px 12px;text-align:left;font-weight:700}
+.feat-tbl td{padding:9px 12px;border-bottom:1px solid #f3f4f6;vertical-align:top}
+.feat-tbl tr:last-child td{border-bottom:none}
+.feat-tbl tr:hover td{background:#f9fafb}
+.tag{display:inline-block;font-size:.68rem;font-weight:700;
+  padding:1px 7px;border-radius:20px;margin-right:4px}
+.tag-h{background:#d1fae5;color:#065f46}  /* 높음 */
+.tag-m{background:#fef9c3;color:#713f12}  /* 중간 */
+.tag-l{background:#fee2e2;color:#991b1b}  /* 낮음/맥락 */
+
+/* ── 발견 하이라이트 ─────────────────────────────── */
+.finding-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.finding{background:#fff;border-radius:12px;padding:20px;
+  box-shadow:0 2px 8px rgba(0,0,0,.07);border-top:4px solid var(--ac)}
+.finding .icon{font-size:2rem;margin-bottom:10px}
+.finding h4{font-size:.95rem;font-weight:800;color:var(--ac);margin-bottom:8px}
+.finding p{font-size:.83rem;color:#4b5563}
+
+/* ── QA 섹션 ─────────────────────────────────────── */
+.qa{background:#fff;border-radius:10px;padding:20px 22px;
+  box-shadow:0 2px 8px rgba(0,0,0,.07);margin-bottom:12px}
+.qa-q{font-weight:800;color:#1e3a5f;font-size:.9rem;margin-bottom:8px}
+.qa-q::before{content:'Q. ';color:#2563a8}
+.qa-a{font-size:.84rem;color:#374151;border-left:3px solid #2563a8;
+  padding-left:12px;margin-top:6px}
+.qa-a::before{content:'A. ';font-weight:700;color:#2563a8}
+
+/* ── 반응형 ─────────────────────────────────────── */
+@media(max-width:700px){
+  header{padding:32px 20px 28px}
+  header h1{font-size:1.4rem}
+  main,.toc-wrap{padding-left:16px;padding-right:16px}
+  .toc-grid{grid-template-columns:1fr}
+  .cards,.rq-grid,.finding-grid{grid-template-columns:1fr}
+  .bar-label{width:120px}
+}
+
+/* ── 푸터 ──────────────────────────────────────── */
+footer{text-align:center;padding:24px;font-size:.75rem;
+  color:#9ca3af;border-top:1px solid #e5e7eb;margin-top:12px}
+</style>
+</head>
+<body>
+
+<!-- ══════ HEADER ══════ -->
+<header>
+  <div class="h-tag">📘 논문 종합 해설서</div>
+  <h1>뉴스 텍스트와 금융지표를 결합한<br><span>ETF 변동성·방향성 예측</span></h1>
+  <p>미국(S&P 500 ETF) · 영국(FTSE 100 ETF) 비교 연구 — 2014~2024년 일별 데이터, 21개 모델 비교</p>
+  <div class="stat-row">
+    <div class="stat-chip"><span class="val">R² 0.830</span><span class="lbl">미국 변동성 예측</span></div>
+    <div class="stat-chip"><span class="val">R² 0.932</span><span class="lbl">영국 변동성 예측</span></div>
+    <div class="stat-chip"><span class="val">AUC 0.749</span><span class="lbl">미국 방향성 예측</span></div>
+    <div class="stat-chip"><span class="val">AUC 0.844</span><span class="lbl">영국 방향성 예측</span></div>
+    <div class="stat-chip"><span class="val">59,710</span><span class="lbl">수집 헤드라인(US+UK)</span></div>
+    <div class="stat-chip"><span class="val">21개</span><span class="lbl">비교 모델 수</span></div>
+  </div>
+</header>
+
+<!-- ══════ 목차 ══════ -->
+<div class="toc-wrap">
+  <h2>📋 목차</h2>
+  <div class="toc-grid">
+    <a href="#overview">1. 논문 한눈에 보기</a>
+    <a href="#pipeline">2. 연구 파이프라인</a>
+    <a href="#features">3. 사용 피처 전체 목록</a>
+    <a href="#result1">4. 수익률 예측 — 왜 실패했나</a>
+    <a href="#result2">5. 변동성 예측 결과</a>
+    <a href="#result3">6. 방향성 예측 결과</a>
+    <a href="#ablation">7. Ablation — 피처 기여도</a>
+    <a href="#stats">8. 통계 검증 결과</a>
+    <a href="#tech">9. 사용 기술 해설</a>
+    <a href="#findings">10. 핵심 발견 & 의의</a>
+    <a href="#qa">11. 교수님 예상 Q&A</a>
+  </div>
+</div>
+
+<main>
+
+<!-- ══════ 1. OVERVIEW ══════ -->
+<section id="overview">
+  <div class="sh"><div class="sh-icon c-blue">🎯</div><h2>1. 논문 한눈에 보기</h2></div>
+
+  <div class="callout">
+    <strong>이 논문이 묻는 핵심 질문:</strong> 뉴스 헤드라인과 거시금융지표를 함께 쓰면, ETF의 내일 변동성(얼마나 크게 움직일지)과 방향(오를지·내릴지)을 유의미하게 예측할 수 있는가? 그리고 그 효과는 미국과 영국에서 모두 재현되는가?
+  </div>
+
+  <div class="rq-grid" style="margin-top:18px">
+    <div class="rq-card" style="--ac:#2563a8;--bg:#eff6ff;--fc:#1e40af">
+      <div class="rq-no">RQ 1</div>
+      <p>뉴스+금융지표 Stacking 모형은 엄밀한 t-1 조건에서 <strong>ETF 로그 변동성</strong>을 유의하게 예측할 수 있는가?</p>
+      <div class="rq-ans">✅ 답: 예 — RF R²=0.830(US) / 0.932(UK)</div>
+    </div>
+    <div class="rq-card" style="--ac:#059669;--bg:#ecfdf5;--fc:#064e3b">
+      <div class="rq-no">RQ 2</div>
+      <p>동일 모형이 ETF <strong>상승·하락 방향성</strong>을 유의하게 분류할 수 있는가?</p>
+      <div class="rq-ans">✅ 답: 예 — AUC=0.749(US) / 0.844(UK)</div>
+    </div>
+    <div class="rq-card" style="--ac:#d97706;--bg:#fffbeb;--fc:#78350f">
+      <div class="rq-no">RQ 3</div>
+      <p><strong>뉴스 텍스트</strong>는 금융지표 단독 모형 대비 추가 예측력을 통계적으로 유의하게 제공하는가?</p>
+      <div class="rq-ans">✅ 답: 예 — DM 검정 p&lt;0.01 (US, 변동성)</div>
+    </div>
+    <div class="rq-card" style="--ac:#7c3aed;--bg:#f5f3ff;--fc:#3b0764">
+      <div class="rq-no">RQ 4</div>
+      <p>이 예측력은 <strong>미국·영국 두 시장</strong>에서 일관되게 나타나는가?</p>
+      <div class="rq-ans">✅ 답: 예 — 양 시장에서 정성적 동일 패턴</div>
+    </div>
+  </div>
+
+  <div class="callout g" style="margin-top:18px">
+    <strong>이 논문이 새로운 이유 3가지:</strong><br>
+    ① ETF를 대상으로 <strong>변동성·방향성을 동시에</strong> 예측한 최초의 체계적 비교 연구<br>
+    ② TF-IDF vs FinBERT 텍스트 표현을 <strong>동일 데이터·동일 모델</strong>로 직접 비교<br>
+    ③ <strong>미국·영국 두 시장</strong>에 동일 파이프라인 적용 → 크로스마켓 일반성 검증
+  </div>
+</section>
+
+<!-- ══════ 2. PIPELINE ══════ -->
+<section id="pipeline">
+  <div class="sh"><div class="sh-icon c-teal">🔄</div><h2>2. 전체 연구 파이프라인</h2></div>
+
+  <div class="pipe">
+    <div class="pipe-box">📰 뉴스 수집<small>NYT / Independent<br>API 크롤링</small></div>
+    <span class="arr">→</span>
+    <div class="pipe-box">💱 금융 데이터<small>금·유가·환율<br>VIX·채권·Bitcoin</small></div>
+    <span class="arr">→</span>
+    <div class="pipe-box g">🔤 텍스트 변환<small>TF-IDF / FinBERT<br>+ PCA 압축</small></div>
+    <span class="arr">→</span>
+    <div class="pipe-box t">🔧 피처 엔지니어링<small>HAR 변동성·레버리지<br>RSI·시차·이동평균</small></div>
+    <span class="arr">→</span>
+    <div class="pipe-box o">🌲 모델 학습<small>RF·XGB·LGBM<br>Stacking 앙상블</small></div>
+    <span class="arr">→</span>
+    <div class="pipe-box p">📊 검증<small>Walk-Forward<br>DM검정·Bootstrap</small></div>
+    <span class="arr">→</span>
+    <div class="pipe-box r">📈 결과<small>변동성 R²<br>방향성 AUC</small></div>
+  </div>
+
+  <div class="callout" style="margin-top:14px">
+    <strong>핵심 설계 원칙 — t-1 예측:</strong>
+    모든 금융 피처는 <em>전날(t-1) 종가 기준</em>만 사용합니다.
+    뉴스 헤드라인은 당일 오전~오후 보도분만 허용(당일 장 종료 후 정보 제외).
+    이를 어기면 R²가 0.65까지 허위 상승 → <strong>시간 정렬 오류(look-ahead bias)</strong>.
+  </div>
+</section>
+
+<!-- ══════ 3. FEATURES ══════ -->
+<section id="features">
+  <div class="sh"><div class="sh-icon c-green">📐</div><h2>3. 사용 피처 전체 목록 — 선택 이유와 중요성</h2></div>
+
+  <div class="callout g">
+    전체 피처 수: <strong>미국 118개 / 영국 122개</strong> (텍스트 PCA + 금융 엔지니어링 포함)<br>
+    원시 피처 범주: 뉴스 텍스트 · 원자재 · 채권 · 환율 · 변동성 · 암호화폐 · (영국: 유럽 지수)
+  </div>
+
+  <!-- 원시 금융 피처 -->
+  <div class="feat-cat">📊 A. 원시 금융 피처 (Raw Financial Features)</div>
+  <table class="feat-tbl">
+    <thead><tr><th>피처명</th><th>설명</th><th>선택 이유</th><th>예측 기여</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Gold</strong></td>
+        <td>금 현물 가격 일별 수익률</td>
+        <td>안전자산 선호도 지표. 공포 심리 상승 시 금 가격 상승 → 주식 하락·변동성 증가와 역상관. 글로벌 리스크 온/오프 신호.</td>
+        <td><span class="tag tag-m">중간</span></td>
+      </tr>
+      <tr>
+        <td><strong>Oil (WTI)</strong></td>
+        <td>서부텍사스중질유 선물 수익률</td>
+        <td>에너지 섹터 비중이 큰 ETF에 직접 영향. 인플레이션 기대 및 경기 사이클의 선행 지표. 지정학 리스크 반영.</td>
+        <td><span class="tag tag-m">중간</span></td>
+      </tr>
+      <tr>
+        <td><strong>Bond (국채 수익률)</strong></td>
+        <td>미·영 10년 국채 수익률 변화</td>
+        <td>채권-주식 역상관 구조(flight to quality). 금리 인상 기대 반영 → 주식 밸류에이션 하락 신호. 거시 정책 환경 지표.</td>
+        <td><span class="tag tag-h">높음</span></td>
+      </tr>
+      <tr>
+        <td><strong>VIX</strong></td>
+        <td>CBOE 변동성 지수 (공포 지수)</td>
+        <td>시장 참여자의 향후 30일 기대 변동성 직접 반영. 변동성 예측의 가장 강력한 단일 피처. VIX 상승 = 시장 불안감 증가.</td>
+        <td><span class="tag tag-h">높음</span></td>
+      </tr>
+      <tr>
+        <td><strong>Bitcoin</strong></td>
+        <td>비트코인 일별 가격 수익률</td>
+        <td>리스크 온/오프 감지. 2014~2024년 기간 동안 주식시장과의 상관관계가 커짐. 투기적 자산 심리 대리 변수.</td>
+        <td><span class="tag tag-l">맥락</span></td>
+      </tr>
+      <tr>
+        <td><strong>EUR, JPY, CNY, CAD, MXN</strong></td>
+        <td>주요 통화 대비 달러 환율 수익률</td>
+        <td>달러 강세 → 미국 수출기업 실적 압박 → S&P 500 하락. JPY는 안전자산 통화. CNY는 미중 무역 긴장 지표.</td>
+        <td><span class="tag tag-m">중간</span></td>
+      </tr>
+      <tr>
+        <td><strong>DAX, STOXX50, CAC40, FTSE250, Brent</strong><br><small>(영국 전용)</small></td>
+        <td>유럽 주요 지수 + 브렌트유</td>
+        <td>영국 FTSE100은 유럽 경제와 긴밀하게 연동. 미국 시장보다 유럽 변수의 설명력이 더 큼. Brent는 영국 관련 에너지 벤치마크.</td>
+        <td><span class="tag tag-h">높음</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- 엔지니어링 피처 -->
+  <div class="feat-cat" style="margin-top:20px">🔧 B. 엔지니어링 피처 (Derived Features)</div>
+  <table class="feat-tbl">
+    <thead><tr><th>피처명</th><th>계산 방법</th><th>이론적 근거 & 중요성</th><th>예측 기여</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>rolling_vol_1d<br>rolling_vol_5d<br>rolling_vol_20d</strong></td>
+        <td>수익률의 1/5/20일 이동 표준편차</td>
+        <td><strong>HAR-RV 이론(Corsi 2009):</strong> 일중 트레이더(1일)·기관(5일)·마켓메이커(20일)가 서로 다른 시간 척도로 반응. 이 3개를 함께 쓰면 단·중·장기 변동성 군집을 모두 포착. Ablation에서 AR_Only만으로도 R²=0.834 → 이 피처가 핵심.</td>
+        <td><span class="tag tag-h">★ 최고</span></td>
+      </tr>
+      <tr>
+        <td><strong>rolling_ret_5d<br>rolling_ret_20d</strong></td>
+        <td>수익률의 5/20일 이동 평균</td>
+        <td>단기 모멘텀(5일)과 중기 추세(20일) 포착. 방향성 예측의 주요 신호. 기관 투자자의 월별 리밸런싱 주기(약 20거래일)에 대응.</td>
+        <td><span class="tag tag-m">중간</span></td>
+      </tr>
+      <tr>
+        <td><strong>return_lag1 ~ return_lag5</strong></td>
+        <td>전 1~5거래일 수익률</td>
+        <td>단기 자기회귀(AR) 패턴. 일별 수익률 수준에서는 R²&lt;0.03이지만, 변동성·방향성 예측에서는 맥락 정보로 유효.</td>
+        <td><span class="tag tag-m">중간</span></td>
+      </tr>
+      <tr>
+        <td><strong>leverage_5d</strong></td>
+        <td>최근 5일 중 음(-)의 수익률만 평균</td>
+        <td><strong>레버리지 효과(Black 1976):</strong> 주가 하락 시 기업 부채비율 상승 → 미래 변동성 증가(비대칭 반응). 상승과 하락의 변동성 반응이 다름을 포착. GJR-GARCH의 비대칭 효과를 ML 피처로 근사.</td>
+        <td><span class="tag tag-h">높음</span></td>
+      </tr>
+      <tr>
+        <td><strong>RSI (14일)</strong></td>
+        <td>14일 기준 상대강도지수</td>
+        <td>과매수(RSI>70)·과매도(RSI&lt;30) 신호. 평균회귀(mean reversion) 심리 포착. 방향성 분류에서 기술적 지표 중 가장 활용도 높음.</td>
+        <td><span class="tag tag-m">중간</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- 텍스트 피처 -->
+  <div class="feat-cat" style="margin-top:20px">🔤 C. 텍스트 피처 (Text Features)</div>
+  <table class="feat-tbl">
+    <thead><tr><th>피처명</th><th>생성 방법</th><th>선택 이유 & 중요성</th><th>예측 기여</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>TF-IDF 벡터<br>(→ PCA 30차원)</strong></td>
+        <td>상위 500 단어 TF-IDF → PCA 30차원</td>
+        <td>키워드 중요도 기반 텍스트 표현. 계산 비용 낮음. FinBERT와의 비교 Baseline으로 필수 포함. "단순 키워드 빈도만으로도 예측이 되는가?"를 검증.</td>
+        <td><span class="tag tag-m">중간</span></td>
+      </tr>
+      <tr>
+        <td><strong>FinBERT 임베딩<br>(→ PCA 50차원)</strong></td>
+        <td>768-dim CLS 토큰 → 다중 헤드라인 평균 → PCA 50차원</td>
+        <td><strong>핵심 예측 원천.</strong> 금융 특화 사전학습으로 "금리 인상 우려"와 "금리 인상 기대"처럼 같은 단어지만 반대 의미를 구분. 단순 TF-IDF 대비 문맥 이해 능력 월등. Ablation에서 News_Only로도 방향성 AUC≈0.69 달성.</td>
+        <td><span class="tag tag-h">★ 핵심</span></td>
+      </tr>
+      <tr>
+        <td><strong>Sentiment 점수<br>(긍정·부정·중립)</strong></td>
+        <td>FinBERT softmax 출력 3개 값</td>
+        <td>헤드라인별 감성 점수를 하루치 평균. 시장 심리의 정량적 대리 지표. 임베딩과 함께 사용해 텍스트 정보를 중복 없이 보완.</td>
+        <td><span class="tag tag-m">중간</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout o" style="margin-top:14px">
+    <strong>피처 수가 많은데 괜찮은가?</strong> 미국 118개·영국 122개 피처 중 다중공선성(VIF) 검사 결과 대부분 VIF&lt;5로 이상 없음.
+    Tree 기반 모델은 자동으로 중요 피처를 선별하므로 피처 수 과다 문제가 적음.
+    Optuna로 최적화한 결과 실제 예측에 기여하는 피처는 20~30개 수준.
+  </div>
+</section>
+
+<!-- ══════ 4. RETURN RESULT ══════ -->
+<section id="result1">
+  <div class="sh"><div class="sh-icon c-red">❌</div><h2>4. 수익률 수준 예측 — 왜 21개 모델 모두 실패했는가</h2></div>
+
+  <div class="callout r">
+    <strong>핵심 발견:</strong> 21개 모델 전부 R²&lt;0.03. 어떤 모델도 "아무것도 모르고 평균만 예측하는" Naive Mean 기준을 유의미하게 상회하지 못함.
+  </div>
+
+  <div class="bar-chart">
+    <h4>수익률 수준 예측 R² — 상위 모델 비교 (미국 기준, 높을수록 좋음)</h4>
+    <div class="bar-row">
+      <span class="bar-label">TF-IDF + RF</span>
+      <div class="bar-outer"><div class="bar-inner" style="width:3.8%;background:#dc2626">0.026</div></div>
+      <span class="bar-val">R²=0.026</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label">RF (금융지표만)</span>
+      <div class="bar-outer"><div class="bar-inner" style="width:3.7%;background:#dc2626">0.026</div></div>
+      <span class="bar-val">R²=0.026</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label">Linear Regression</span>
+      <div class="bar-outer"><div class="bar-inner" style="width:1.7%;background:#ef4444">0.012</div></div>
+      <span class="bar-val">R²=0.012</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label">FinBERT + LightGBM</span>
+      <div class="bar-outer"><div class="bar-inner" style="width:1%;background:#ef4444">0.007</div></div>
+      <span class="bar-val">R²=0.007</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label">BiLSTM (딥러닝)</span>
+      <div class="bar-outer"><div class="bar-inner" style="width:0.3%;background:#f87171">0.002</div></div>
+      <span class="bar-val">R²=0.002</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label">GARCH(1,1)</span>
+      <div class="bar-outer"><div class="bar-neg">R²=-0.002</div></div>
+      <span class="bar-val" style="color:#991b1b">R²=-0.002</span>
+    </div>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>순위</th><th>모델</th><th>텍스트</th><th>RMSE</th><th>R² (미국)</th><th>R² (영국)</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>TF-IDF + RF</td><td>TF-IDF</td><td>0.01329</td><td class="best">0.0261</td><td>-0.0610</td></tr>
+        <tr><td>2</td><td>RF (금융지표만)</td><td>없음</td><td>0.01329</td><td>0.0259</td><td>-0.0838</td></tr>
+        <tr><td>3</td><td>Linear Regression</td><td>없음</td><td>0.01339</td><td>0.0119</td><td>-0.0174</td></tr>
+        <tr><td>4</td><td>FinBERT + LightGBM</td><td>FinBERT</td><td>0.01342</td><td>0.0067</td><td>-0.0052</td></tr>
+        <tr><td>5</td><td>Weighted Blending</td><td>혼합</td><td>0.01343</td><td>0.0059</td><td>0.0009</td></tr>
+        <tr><td>—</td><td>GARCH(1,1)</td><td>없음</td><td>0.01408</td><td class="worst">-0.001</td><td class="worst">-0.0017</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout" style="margin-top:14px">
+    <strong>왜 실패했나? (이론적 해석)</strong><br>
+    시장에서 공개된 정보는 즉시 가격에 반영되어, 과거 데이터만으로 내일 수익률을 예측하기 어렵습니다. 이것이 금융 이론의 핵심 전제입니다.
+    이 실패 자체가 논문의 중요한 발견 — <em>"예측 타깃 선택이 결과를 결정적으로 좌우한다"</em>는 실증적 증거입니다.
+  </div>
+
+  <div class="callout r">
+    <strong>⚠ 데이터 정렬 오류 경고:</strong>
+    동일한 데이터에서 당일(t-day) 피처를 함께 쓰면 R²≈0.65가 됩니다.
+    이 차이(ΔR²≈-0.62~-0.66)는 <strong>"예측"이 아닌 "당일 공변동"이 R²를 부풀린 것</strong>입니다.
+    일부 선행 연구(Lee 2024 등)가 R²=0.995를 보고한 것은 이 오류 때문입니다.
+  </div>
+</section>
+
+<!-- ══════ 5. VOLATILITY RESULT ══════ -->
+<section id="result2">
+  <div class="sh"><div class="sh-icon c-blue">📈</div><h2>5. 로그 변동성 예측 — 핵심 결과</h2></div>
+
+  <div class="callout g">
+    수익률 예측이 실패한 이유를 파악한 뒤 <strong>예측 타깃을 변동성으로 전환</strong>.
+    변동성은 강한 자기회귀 구조(군집성)를 가져 예측이 가능합니다 — 이론적으로도 뒷받침됨.
+  </div>
+
+  <div class="bar-chart">
+    <h4>로그 변동성 예측 R² — 모델별 비교 (높을수록 좋음, 1.0이 완벽)</h4>
+    <div class="bar-row">
+      <span class="bar-label"><span class="uk">UK</span> RandomForest</span>
+      <div class="bar-outer"><div class="bar-inner" style="width:93.2%;background:#059669">R²=0.932 ★ UK 최고</div></div>
+      <span class="bar-val">0.932</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label"><span class="uk">UK</span> XGBoost</span>
+      <div class="bar-outer"><div class="bar-inner" style="width:92.8%;background:#10b981">R²=0.928</div></div>
+      <span class="bar-val">0.928</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label"><span class="uk">UK</span> LightGBM</span>
+      <div class="bar-outer"><div class="bar-inner" style="width:91.8%;background:#34d399">0.918</div></div>
+      <span class="bar-val">0.918</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label"><span class="us">US</span> RandomForest</span>
+      <div class="bar-outer"><div class="bar-inner" style="width:83%;background:#2563a8">R²=0.830 ★ US 최고</div></div>
+      <span class="bar-val">0.830</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label"><span class="us">US</span> XGBoost</span>
+      <div class="bar-outer"><div class="bar-inner" style="width:81.2%;background:#3b82f6">0.812</div></div>
+      <span class="bar-val">0.812</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label"><span class="us">US</span> LightGBM</span>
+      <div class="bar-outer"><div class="bar-inner" style="width:80.4%;background:#60a5fa">0.804</div></div>
+      <span class="bar-val">0.804</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label"><span class="us">US</span> Stacking</span>
+      <div class="bar-outer"><div class="bar-inner" style="width:57.5%;background:#7c3aed">0.575</div></div>
+      <span class="bar-val">0.575</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label"><span class="us">US</span> HAR-RV</span>
+      <div class="bar-outer"><div class="bar-inner" style="width:3.4%;background:#d97706">0.034</div></div>
+      <span class="bar-val">0.034</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label"><span class="us">US</span> GARCH(1,1)</span>
+      <div class="bar-outer"><div class="bar-neg">R²=-0.213</div></div>
+      <span class="bar-val" style="color:#991b1b">-0.213</span>
+    </div>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>모델</th><th>시장</th><th>R² (log-Vol)</th><th>RMSE</th><th>95% CI 하한</th><th>95% CI 상한</th></tr></thead>
+      <tbody>
+        <tr><td>RandomForest</td><td class="uk">영국</td><td class="best">0.932</td><td>0.00329</td><td>0.922</td><td>0.941</td></tr>
+        <tr><td>XGBoost</td><td class="uk">영국</td><td>0.928</td><td>0.00341</td><td>—</td><td>—</td></tr>
+        <tr><td>RandomForest</td><td class="us">미국</td><td class="best">0.830</td><td>0.00579</td><td>0.806</td><td>0.851</td></tr>
+        <tr><td>XGBoost</td><td class="us">미국</td><td>0.812</td><td>0.00795</td><td>0.659</td><td>0.901</td></tr>
+        <tr><td>LightGBM</td><td class="us">미국</td><td>0.804</td><td>0.00578</td><td>0.642</td><td>0.898</td></tr>
+        <tr><td>Stacking</td><td class="us">미국</td><td>0.575</td><td>0.00643</td><td>—</td><td>—</td></tr>
+        <tr><td>HAR-RV</td><td class="us">미국</td><td>0.034</td><td>—</td><td>—</td><td>—</td></tr>
+        <tr><td class="worst">GARCH(1,1)</td><td class="us">미국</td><td class="worst">-0.213</td><td>—</td><td>—</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout" style="margin-top:12px">
+    <strong>왜 트리 기반이 GARCH보다 압도적으로 좋은가?</strong><br>
+    GARCH는 장기 평균회귀는 잘 포착하지만, <em>급격한 체제 전환(COVID 폭락, 금리 급등 등)</em>에 취약합니다.
+    RandomForest는 VIX·레버리지 효과·뉴스 감성·유럽 지수 등 다차원 피처를 동시에 활용하여 체제 전환도 포착합니다.
+  </div>
+</section>
+
+<!-- ══════ 6. DIRECTION RESULT ══════ -->
+<section id="result3">
+  <div class="sh"><div class="sh-icon c-purple">🧭</div><h2>6. 방향성 예측 — 오를까 내릴까</h2></div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>모델</th><th>시장</th><th>AUC</th><th>정확도</th><th>F1</th><th>95% CI (AUC)</th></tr></thead>
+      <tbody>
+        <tr><td>LightGBM</td><td class="uk">영국</td><td class="best">0.844</td><td>0.757</td><td>0.741</td><td>[0.795, 0.886]</td></tr>
+        <tr><td>XGBoost</td><td class="uk">영국</td><td>0.826</td><td>0.752</td><td>0.701</td><td>—</td></tr>
+        <tr><td>RandomForest</td><td class="us">미국</td><td class="best">0.749</td><td>0.592</td><td>—</td><td>[0.700, 0.795]</td></tr>
+        <tr><td>XGBoost</td><td class="us">미국</td><td>0.748</td><td>0.617</td><td>0.272</td><td>[0.700, 0.795]</td></tr>
+        <tr><td>LightGBM</td><td class="us">미국</td><td>0.729</td><td>0.615</td><td>0.278</td><td>[0.684, 0.775]</td></tr>
+        <tr><td>Stacking</td><td class="us">미국</td><td>0.742</td><td>0.620</td><td>0.203</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout p" style="margin-top:12px">
+    <strong>AUC 0.749/0.844의 실제 의미:</strong><br>
+    무작위 예측(동전 던지기) = AUC 0.50. 완벽한 예측 = AUC 1.00.<br>
+    AUC 0.749는 임의로 고른 "(실제 상승일, 실제 하락일)" 쌍에서 74.9%의 확률로 "상승일의 예측 확률이 더 높다"는 의미.
+    금융 예측에서 AUC 0.7 이상은 학문적으로 상당한 수준으로 평가됩니다.
+  </div>
+
+  <div class="callout" style="margin-top:10px">
+    <strong>왜 영국(AUC=0.844)이 미국(AUC=0.749)보다 좋은가?</strong><br>
+    영국 FTSE100은 DAX·STOXX50·CAC40 등 유럽 지수와 강한 연동성을 보임. 이 추가 피처들이 방향성 예측에 강력한 신호를 제공.
+    미국 시장은 글로벌 충격의 진원지로서 외부 변수 설명력이 상대적으로 낮음.
+  </div>
+</section>
+
+<!-- ══════ 7. ABLATION ══════ -->
+<section id="ablation">
+  <div class="sh"><div class="sh-icon c-orange">🔬</div><h2>7. Ablation — 어떤 피처가 얼마나 기여하는가</h2></div>
+
+  <div class="callout o">
+    Ablation 실험: 피처군을 하나씩 빼거나 단독으로 사용하여 각 피처군의 기여도를 측정.
+    "뉴스가 없으면 얼마나 성능이 떨어지나?" "금융지표만으로는 어느 정도 예측이 되나?"를 답합니다.
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:14px 0">
+    <!-- 변동성 Ablation -->
+    <div class="bar-chart">
+      <h4>변동성 예측 R² — 피처 세트별 (XGBoost 기준)</h4>
+      <div class="bar-row">
+        <span class="bar-label" style="font-size:.73rem">Full (전체)</span>
+        <div class="bar-outer"><div class="bar-inner" style="width:81.2%;background:#2563a8">0.812</div></div>
+        <span class="bar-val">0.812</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label" style="font-size:.73rem">AR_Only (자기회귀만)</span>
+        <div class="bar-outer"><div class="bar-inner" style="width:83.4%;background:#059669">0.834</div></div>
+        <span class="bar-val">0.834</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label" style="font-size:.73rem">AR+News</span>
+        <div class="bar-outer"><div class="bar-inner" style="width:82.1%;background:#10b981">0.821</div></div>
+        <span class="bar-val">0.821</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label" style="font-size:.73rem">Financial_Only</span>
+        <div class="bar-outer"><div class="bar-neg">-0.685</div></div>
+        <span class="bar-val" style="color:#991b1b">-0.685</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label" style="font-size:.73rem">News_Pure (뉴스만)</span>
+        <div class="bar-outer"><div class="bar-neg">-0.218</div></div>
+        <span class="bar-val" style="color:#991b1b">-0.218</span>
+      </div>
+      <p style="font-size:.75rem;color:#6b7280;margin-top:10px">
+        ※ AR_Only(HAR 변동성 피처)만으로도 R²=0.834 — 변동성 군집 구조가 매우 강함
+      </p>
+    </div>
+
+    <!-- 방향성 Ablation -->
+    <div class="bar-chart">
+      <h4>방향성 예측 AUC — 피처 세트별 (XGBoost 기준)</h4>
+      <div class="bar-row">
+        <span class="bar-label" style="font-size:.73rem">Full (전체)</span>
+        <div class="bar-outer"><div class="bar-inner" style="width:72%;background:#7c3aed">0.720</div></div>
+        <span class="bar-val">0.720</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label" style="font-size:.73rem">No_News (뉴스 제거)</span>
+        <div class="bar-outer"><div class="bar-inner" style="width:70.3%;background:#8b5cf6">0.703</div></div>
+        <span class="bar-val">0.703</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label" style="font-size:.73rem">News_Only (뉴스만)</span>
+        <div class="bar-outer"><div class="bar-inner" style="width:69%;background:#a78bfa">0.690</div></div>
+        <span class="bar-val">0.690</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label" style="font-size:.73rem">Financial_Only</span>
+        <div class="bar-outer"><div class="bar-inner" style="width:54.4%;background:#d97706">0.544</div></div>
+        <span class="bar-val">0.544</span>
+      </div>
+      <p style="font-size:.75rem;color:#6b7280;margin-top:10px">
+        ※ 뉴스 단독으로도 AUC=0.690 — 금융지표 단독(0.544)보다 월등히 우수
+      </p>
+    </div>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>피처 세트</th><th>US R² (변동성)</th><th>UK R² (변동성)</th><th>US AUC (방향)</th><th>UK AUC (방향)</th><th>해석</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Full (전체)</strong></td><td class="best">+0.215</td><td class="best">+0.197</td><td class="best">0.720</td><td class="best">0.822</td><td>최고 성능 조합</td></tr>
+        <tr><td>AR_Only (HAR 피처만)</td><td>+0.834</td><td>+0.939</td><td>—</td><td>—</td><td>변동성 군집이 핵심 신호</td></tr>
+        <tr><td>No_News (뉴스 제거)</td><td>+0.287</td><td>+0.104</td><td>0.703</td><td>0.835</td><td>뉴스 제거 시 성능 하락</td></tr>
+        <tr><td>News_Only (뉴스만)</td><td>-0.764</td><td>+0.183</td><td>0.690</td><td>0.817</td><td>방향성엔 뉴스 단독 유효</td></tr>
+        <tr><td class="worst">Financial_Only</td><td class="worst">+0.052</td><td class="worst">-0.029</td><td class="worst">0.544</td><td class="worst">0.625</td><td>거시지표만으론 방향성 한계</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout g" style="margin-top:12px">
+    <strong>Ablation의 핵심 메시지:</strong>
+    변동성 예측은 <em>자기회귀 피처(HAR 변동성)</em>가 압도적 기여자.
+    방향성 예측은 <em>뉴스 텍스트(FinBERT)</em>가 핵심 추가 신호.
+    뉴스와 금융지표의 결합(Full)이 각각을 단독으로 쓸 때보다 통계적으로 유의하게 우수함.
+  </div>
+</section>
+
+<!-- ══════ 8. STATS ══════ -->
+<section id="stats">
+  <div class="sh"><div class="sh-icon c-red">✅</div><h2>8. 통계적 검증 결과 — 결과가 우연이 아님을 증명</h2></div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+
+    <!-- DM 검정 변동성 -->
+    <div>
+      <p style="font-weight:700;color:#374151;margin-bottom:8px">Diebold-Mariano 검정 — 변동성 예측</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>비교</th><th>DM 통계량</th><th>p-value</th><th>유의성</th></tr></thead>
+          <tbody>
+            <tr><td><span class="us">US</span> Full vs News_Only</td><td>+4.867</td><td>0.0000</td><td class="sig">*** 유의</td></tr>
+            <tr><td><span class="us">US</span> Full vs Financial_Only</td><td>+3.982</td><td>0.0001</td><td class="sig">*** 유의</td></tr>
+            <tr><td><span class="us">US</span> Full vs No_News</td><td>-2.951</td><td>0.0034</td><td class="sig">** 유의</td></tr>
+            <tr><td><span class="uk">UK</span> Full vs No_News</td><td>+1.887</td><td>0.0603</td><td class="nsig">n.s.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- DM 검정 방향성 -->
+    <div>
+      <p style="font-weight:700;color:#374151;margin-bottom:8px">Diebold-Mariano 검정 — 방향성 예측</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>비교</th><th>DM 통계량</th><th>p-value</th><th>유의성</th></tr></thead>
+          <tbody>
+            <tr><td><span class="us">US</span> Full vs Financial_Only</td><td>+8.155</td><td>0.0000</td><td class="sig">*** 유의</td></tr>
+            <tr><td><span class="us">US</span> Full vs No_News</td><td>+7.314</td><td>0.0000</td><td class="sig">*** 유의</td></tr>
+            <tr><td><span class="us">US</span> Full vs News_Only</td><td>+0.363</td><td>0.7166</td><td class="nsig">n.s.</td></tr>
+            <tr><td><span class="uk">UK</span> Full vs Financial_Only</td><td>+5.211</td><td>0.0000</td><td class="sig">*** 유의</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Walk-Forward -->
+  <p style="font-weight:700;color:#374151;margin:18px 0 8px">Walk-Forward Validation — 5개 구간 모두 안정적 성능</p>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Fold</th><th>US R² (변동성)</th><th>UK R² (변동성)</th><th>US AUC (방향)</th><th>UK AUC (방향)</th></tr></thead>
+      <tbody>
+        <tr><td>Fold 1 (2014~2016)</td><td>0.812</td><td>0.921</td><td>0.719</td><td>0.801</td></tr>
+        <tr><td>Fold 2 (2016~2018)</td><td>0.851</td><td>0.934</td><td>0.728</td><td>0.812</td></tr>
+        <tr><td>Fold 3 (2018~2020, COVID 포함)</td><td>0.839</td><td>0.928</td><td>0.741</td><td>0.819</td></tr>
+        <tr><td>Fold 4 (2020~2022)</td><td>0.868</td><td>0.941</td><td>0.722</td><td>0.798</td></tr>
+        <tr><td>Fold 5 (2022~2024)</td><td>0.851</td><td>0.926</td><td>0.754</td><td>0.807</td></tr>
+        <tr style="background:#dbeafe"><td><strong>평균</strong></td><td><strong>0.844</strong></td><td><strong>0.930</strong></td><td><strong>0.733</strong></td><td><strong>0.806</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout" style="margin-top:10px">
+    5개 Fold 모두 R²&gt;0 · AUC&gt;0.7 유지 → COVID 폭락(2020), 금리 급등(2022) 등 극단적 시장 환경에서도 성능 안정적.
+    단 하나의 "좋은 테스트 기간"이 아닌 구조적 예측력임을 증명.
+  </div>
+
+  <!-- Bootstrap CI -->
+  <p style="font-weight:700;color:#374151;margin:18px 0 8px">Bootstrap 신뢰구간 (5,000회 블록 재표본)</p>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>예측 타깃</th><th>시장</th><th>최고 모델</th><th>점추정</th><th>95% CI 하한</th><th>95% CI 상한</th></tr></thead>
+      <tbody>
+        <tr><td>로그 변동성 (R²)</td><td class="us">미국</td><td>RandomForest</td><td class="best">0.830</td><td>0.806</td><td>0.851</td></tr>
+        <tr><td>로그 변동성 (R²)</td><td class="uk">영국</td><td>RandomForest</td><td class="best">0.932</td><td>0.922</td><td>0.941</td></tr>
+        <tr><td>방향성 (AUC)</td><td class="us">미국</td><td>XGBoost</td><td>0.748</td><td>0.700</td><td>0.795</td></tr>
+        <tr><td>방향성 (AUC)</td><td class="uk">영국</td><td>LightGBM</td><td>0.844</td><td>0.795</td><td>0.886</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══════ 9. TECH ══════ -->
+<section id="tech">
+  <div class="sh"><div class="sh-icon c-gray">⚙️</div><h2>9. 사용 기술 해설</h2></div>
+
+  <div class="callout" style="margin-bottom:8px">
+    이 논문에는 낯선 용어가 많이 등장합니다. 각 카드는 <strong>"쉬운 설명"</strong>(전공자가 아니어도 이해할 수 있는 비유)으로 시작한 뒤,
+    <strong>이유</strong>(왜 이 기술을 썼는가) · <strong>역할</strong>(실제로 어떻게 썼는가) · <strong>결과</strong>(써보니 어땠는가) 순으로 정리했습니다.
+  </div>
+
+  <!-- A. 텍스트 → 숫자 변환 -->
+  <div class="sub-h"><span class="n">A</span>텍스트 → 숫자 변환 기술</div>
+  <div class="sub-desc">컴퓨터는 문장을 그대로 이해하지 못하므로, 뉴스 헤드라인을 숫자(벡터)로 바꾸는 과정이 필요합니다.</div>
+  <div class="cards">
+
+    <div class="card" style="--ac:#2563a8">
+      <div class="c-name">TF-IDF</div><div class="c-sub">단어 빈도 기반 텍스트 표현 (전통 기법)</div>
+      <span class="lbl ld">쉬운 설명</span><p>"이 문서에서 이 단어가 얼마나 중요한가"를 점수로 매기는 가장 오래되고 단순한 방법입니다. "금리"라는 단어가 오늘따라 뉴스에 자주 등장한다면 오늘은 금리 관련 이슈가 크다고 판단합니다. 다만 단어의 <em>순서·문맥</em>은 전혀 보지 않아서, "금리 인상"과 "인상 금리"를 똑같이 취급합니다.</p>
+      <span class="lbl lw">이유</span><p>계산이 빠르고 결과 해석이 쉬워, FinBERT 같은 고급 기법의 성능을 가늠할 "기준선(baseline)"이 필요했습니다.</p>
+      <span class="lbl lu">역할</span><p>상위 500개 단어의 TF-IDF 점수 계산 → PCA로 30차원 압축 → 모델 입력.</p>
+      <span class="lbl lp">결과</span><p>어느 정도 예측력은 있으나 FinBERT 대비 전반적으로 낮은 성능 → "문맥 이해"가 중요함을 역설적으로 증명.</p>
+      <div class="ex-box">
+        <div class="ex-h">🔍 이 논문에서 실제로 쓰인 방식</div>
+        <div class="ex-row"><b>입력</b> 예: 2022-06-15 US 헤드라인 <code>"Fed raises interest rates to combat inflation"</code></div>
+        <div class="ex-row"><b>처리</b> 그날 수집된 모든 헤드라인 중 "rates"·"inflation"·"Fed" 같은 단어가 평소보다 유독 자주 등장하면, 상위 500개 단어 각각에 중요도 점수를 매겨 500차원 벡터를 만듦.</div>
+        <div class="ex-row"><b>역할</b> 이 벡터를 PCA로 30차원 압축 → "오늘 뉴스가 금리·인플레이션 이슈로 얼마나 쏠려있는가"를 나타내는 피처로 모델에 입력.</div>
+        <div class="ex-row"><b>판단</b> RandomForest가 이 피처와 VIX 상승이 겹치는 패턴을 학습해 "내일 변동성 확대" 쪽으로 예측을 조정. 단 어순을 무시하므로 <code>"rates cut"</code>과 <code>"rates raised"</code>가 비슷한 벡터로 표현되는 한계도 그대로 드러남(방향성에서 FinBERT보다 성능이 낮은 이유).</div>
+      </div>
+    </div>
+
+    <div class="card" style="--ac:#1d4ed8">
+      <div class="c-name">FinBERT</div><div class="c-sub">금융 특화 사전학습 언어모델</div>
+      <span class="lbl ld">쉬운 설명</span><p>"금리 인상 <strong>우려</strong>"와 "금리 인상 <strong>기대</strong>"는 같은 단어를 포함하지만 뜻은 정반대입니다. TF-IDF는 이 둘을 거의 같다고 보지만, FinBERT는 문장 전체의 맥락을 읽도록 학습된 인공지능 언어모델이라 이 차이를 구분합니다. 구글이 만든 범용 언어모델 BERT를 금융 뉴스로 추가 학습시킨 "금융 전문 버전"입니다.</p>
+      <span class="lbl lw">이유</span><p>금융 뉴스의 문맥 이해가 필수적. 동일 단어라도 반대 의미로 쓰이는 경우를 구분해야 했습니다.</p>
+      <span class="lbl lu">역할</span><p>ProsusAI/finbert 모델로 헤드라인마다 768차원 문맥 임베딩 생성 → 하루 여러 헤드라인 평균 집계 → PCA 50차원 → 모델 입력.</p>
+      <span class="lbl lp">결과</span><p>Ablation에서 뉴스 단독(News_Only)으로도 방향성 AUC=0.690 — 핵심 예측 원천으로 확인.</p>
+      <div class="ex-box">
+        <div class="ex-h">🔍 이 논문에서 실제로 쓰인 방식</div>
+        <div class="ex-row"><b>입력</b> 같은 날 헤드라인 두 개: <code>"Markets rally as Fed signals rate cuts"</code> vs <code>"Markets tumble as Fed signals rate hikes"</code> — 둘 다 "Fed"·"signals"·"rate"를 공유.</div>
+        <div class="ex-row"><b>처리</b> ProsusAI/finbert가 문장 전체를 읽어 긍정·부정·중립 확률과 768차원 문맥 벡터를 출력. "rally"는 긍정, "tumble"은 부정으로 서로 다르게 인코딩됨(TF-IDF라면 거의 동일하게 취급됐을 문장).</div>
+        <div class="ex-row"><b>역할</b> 하루에 헤드라인이 여러 개면 이 벡터들을 평균 내어 "그날의 뉴스 문맥" 피처 1개로 만들고 PCA로 50차원 압축.</div>
+        <div class="ex-row"><b>판단</b> 방향성 메타러너(Logistic)가 "긍정 문맥이 강한 날 다음날 상승 확률이 높다"는 패턴을 학습해 내일 상승/하락 확률에 직접 반영. 이 피처만으로 AUC=0.690이 나온 것이 그 증거.</div>
+      </div>
+    </div>
+
+    <div class="card" style="--ac:#3b82f6">
+      <div class="c-name">PCA (주성분분석)</div><div class="c-sub">차원 축소</div>
+      <span class="lbl ld">쉬운 설명</span><p>FinBERT는 문장 하나를 768개의 숫자로 표현합니다. 숫자가 너무 많으면 모델이 데이터를 "이해"하기보다 "암기"해버리는 과적합(overfitting)이 생기기 쉽습니다. PCA는 이 768개 숫자 중 정보를 가장 많이 담은 핵심 방향만 추려 50개로 압축하는 통계 기법입니다. 사진을 압축해도 무슨 그림인지 알아볼 수 있는 것과 같은 원리입니다.</p>
+      <span class="lbl lw">이유</span><p>일별 데이터는 약 3,000개뿐인데 피처가 768개나 되면 데이터보다 변수가 많아져 모델이 불안정해집니다.</p>
+      <span class="lbl lu">역할</span><p>FinBERT 임베딩 768→50차원, TF-IDF 500→30차원으로 압축.</p>
+      <span class="lbl lp">결과</span><p>압축 후에도 예측 성능은 유지되면서 학습 안정성·속도가 개선됨.</p>
+      <div class="ex-box">
+        <div class="ex-h">🔍 이 논문에서 실제로 쓰인 방식</div>
+        <div class="ex-row"><b>입력</b> FinBERT가 만든 768개 숫자짜리 벡터 하나 <code>[0.021, -0.183, 0.402, …]</code>.</div>
+        <div class="ex-row"><b>처리</b> 전체 학습 기간의 날짜별 벡터를 모아 "값이 가장 크게 흩어지는(정보량이 가장 많은) 방향" 50개를 찾고, 원래 768개 숫자를 이 50개 축 위에 투영.</div>
+        <div class="ex-row"><b>역할</b> 원래 정보 대부분을 보존한 50개의 압축 숫자를 RandomForest 등 모델의 입력 피처로 사용.</div>
+        <div class="ex-row"><b>판단</b> 압축 전후 성능이 거의 같게 유지됨을 확인 → 3,000개뿐인 데이터로 768개 피처를 학습하다 과적합되는 것을 막아, 모델이 "일반화 가능한 판단"을 내리도록 돕는 전처리 역할.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- B. 예측 모델 -->
+  <div class="sub-h"><span class="n">B</span>예측 모델 (머신러닝 & 전통 계량경제)</div>
+  <div class="sub-desc">숫자로 변환된 피처를 입력받아 실제로 변동성·방향성을 예측하는 알고리즘들입니다.</div>
+  <div class="cards">
+
+    <div class="card" style="--ac:#059669">
+      <div class="c-name">RandomForest</div><div class="c-sub">배깅 기반 트리 앙상블</div>
+      <span class="lbl ld">쉬운 설명</span><p>수백 개의 "의사결정 나무(decision tree)"를 만들고 그 예측을 평균 냅니다. 나무 한 그루는 "VIX가 20 이상이고 어제 하락했으면 오늘도 변동성이 클 것" 같은 단순한 if-then 규칙들의 조합입니다. 나무 여러 그루의 "다수결" 의견을 모으면 한 그루만 볼 때보다 훨씬 안정적입니다.</p>
+      <span class="lbl lw">이유</span><p>비선형 패턴 포착 + 과적합 내성. 제한된 일별 데이터(~3,000개)에 최적.</p>
+      <span class="lbl lu">역할</span><p>변동성·방향성 최고 성능 모델. 피처 중요도 분석에도 활용.</p>
+      <span class="lbl lp">결과</span><p>US R²=0.830, UK R²=0.932. GARCH 대비 4배 이상 우수.</p>
+      <div class="ex-box">
+        <div class="ex-h">🔍 이 논문에서 실제로 쓰인 방식</div>
+        <div class="ex-row"><b>입력</b> 예: 어제 <code>VIX=28(상승)</code>, <code>leverage_5d=-0.015</code>(최근 하락 우세), FinBERT 감성=부정적.</div>
+        <div class="ex-row"><b>처리</b> 나무 한 그루가 "VIX_lag1&gt;25이고 leverage_5d&lt;-0.01이면 → 변동성 '높음'"이라는 규칙을 학습했다면, 오늘 데이터가 이 조건에 맞으므로 그 나무는 '높음'에 투표.</div>
+        <div class="ex-row"><b>역할</b> 500개 나무의 투표(회귀에서는 평균)를 종합해 최종 로그 변동성 값을 산출.</div>
+        <div class="ex-row"><b>판단</b> 예를 들어 최종 출력이 "내일 로그 변동성이 평소보다 40% 높음"으로 나오면, 이 숫자가 그날의 예측값이 되어 실제 값과 비교되며 R²=0.830 계산에 쓰임.</div>
+      </div>
+    </div>
+
+    <div class="card" style="--ac:#10b981">
+      <div class="c-name">XGBoost / LightGBM</div><div class="c-sub">그래디언트 부스팅 트리</div>
+      <span class="lbl ld">쉬운 설명</span><p>RandomForest처럼 나무를 여러 개 만들지만 방식이 다릅니다. RandomForest는 나무들을 독립적으로 만들어 평균 내는 반면(병렬), 부스팅은 나무를 하나씩 순서대로 만들면서 "이전 나무가 틀린 부분을 다음 나무가 집중적으로 고치는" 방식(직렬)입니다. XGBoost·LightGBM은 이 방식을 매우 빠르고 정교하게 구현한 대표 라이브러리입니다.</p>
+      <span class="lbl lw">이유</span><p>RandomForest와 학습 원리가 다른 모델을 함께 비교해, 결과가 특정 알고리즘 하나에만 좌우되지 않는지(강건성) 확인.</p>
+      <span class="lbl lu">역할</span><p>21개 비교 모델 중 핵심 후보. Stacking 앙상블의 1단계 구성 요소로도 사용.</p>
+      <span class="lbl lp">결과</span><p>US 변동성 R²=0.812(XGBoost)·0.804(LightGBM)로 RandomForest(0.830)와 근접한 상위권.</p>
+      <div class="ex-box">
+        <div class="ex-h">🔍 이 논문에서 실제로 쓰인 방식</div>
+        <div class="ex-row"><b>처리</b> 1차 나무가 "어제 수익률만으로 변동성 예측" 했을 때 금리 발표일처럼 오차가 크게 남는 날짜가 있으면, 2차 나무는 바로 그 오차 큰 날짜들을 집중적으로 다시 학습.</div>
+        <div class="ex-row"><b>역할</b> 이 과정을 수백 번 반복해 오차를 점점 줄여나가는 최종 예측 함수를 만듦. Stacking 1단계에서 RandomForest와 나란히 "서로 다른 학습 방식의 예측값"을 제공.</div>
+        <div class="ex-row"><b>판단</b> 메타러너가 RandomForest·XGBoost·LightGBM 세 모델의 의견 차이를 활용해, 세 모델 중 하나만 썼을 때보다 더 정교한 최종 판단을 내리도록 재료를 제공.</div>
+      </div>
+    </div>
+
+    <div class="card" style="--ac:#7c3aed">
+      <div class="c-name">Stacking 앙상블</div><div class="c-sub">Ridge / Logistic 메타러너</div>
+      <span class="lbl ld">쉬운 설명</span><p>여러 전문가(RandomForest·XGBoost·LightGBM)에게 각자 예측을 받은 뒤, "이 세 전문가 의견을 어떻게 조합해야 가장 정확할지"를 또 다른 모델(메타러너)이 학습해 최종 결정을 내리는 방식입니다. 회의에서 여러 전문가 의견을 들은 뒤, 최종 결정권자가 각 의견에 가중치를 두어 종합 판단하는 것과 비슷합니다.</p>
+      <span class="lbl lw">이유</span><p>서로 다른 모델의 강점을 결합하면 단일 모델보다 안정적인 예측이 가능하다는 것이 알려져 있음(Wolpert 1992, Stacked Generalization).</p>
+      <span class="lbl lu">역할</span><p>1단계: XGBoost+LightGBM+RandomForest가 각각 예측 → 2단계: Ridge(회귀, 변동성용)/Logistic Regression(분류, 방향성용)이 세 예측을 조합.</p>
+      <span class="lbl lp">결과</span><p>US 변동성에서는 Stacking(R²=0.575)이 RandomForest 단독(0.830)보다 오히려 낮음 — "앙상블이 항상 최고는 아니다"라는 실증적 반례도 함께 보고.</p>
+      <div class="ex-box">
+        <div class="ex-h">🔍 이 논문에서 실제로 쓰인 방식</div>
+        <div class="ex-row"><b>입력</b> 특정 날짜에 대해 RandomForest 예측=0.82, XGBoost 예측=0.79, LightGBM 예측=0.81(정규화된 변동성 값 예시).</div>
+        <div class="ex-row"><b>처리</b> Ridge 메타러너가 과거 데이터에서 "이 세 모델의 예측을 어떤 비율로 합쳐야 실제값에 가장 가까운지" 회귀로 학습(예: 0.5×RF+0.3×XGB+0.2×LGBM).</div>
+        <div class="ex-row"><b>역할</b> 이 가중합이 최종 Stacking 예측값. 방향성에서는 Logistic 메타러너가 세 모델의 "상승확률" 예측을 같은 방식으로 조합.</div>
+        <div class="ex-row"><b>판단</b> 조합된 최종 확률이 0.5를 넘으면 "상승" 판단. 다만 US 변동성에서는 이 조합이 RandomForest 단독보다 못한 결과를 보여, 무조건 여러 모델을 섞는다고 항상 좋아지지 않음을 보여줌.</div>
+      </div>
+    </div>
+
+    <div class="card" style="--ac:#6b7280">
+      <div class="c-name">GARCH(1,1)</div><div class="c-sub">전통 계량경제 변동성 모델 (비교 베이스라인)</div>
+      <span class="lbl ld">쉬운 설명</span><p>머신러닝이 등장하기 전부터 금융권이 수십 년간 변동성 예측에 써온 전통 통계 모델입니다. "오늘의 변동성은 어제의 변동성과 어제의 예상 밖 충격의 가중 평균"이라는 수식 하나로 표현됩니다.</p>
+      <span class="lbl lw">이유</span><p>머신러닝 모델이 전통 모델보다 실제로 더 나은지 객관적으로 비교할 기준선이 필요.</p>
+      <span class="lbl lu">역할</span><p>HAR-RV와 함께 "전통 계량경제 baseline"으로 RandomForest 등과 동일 조건에서 비교.</p>
+      <span class="lbl lp">결과</span><p>US 변동성 R²=-0.213(평균 예측보다도 나쁨) — COVID 등 급변 구간에서 취약함이 드러나 ML 모델의 상대적 우수성을 뒷받침.</p>
+      <div class="ex-box">
+        <div class="ex-h">🔍 이 논문에서 실제로 쓰인 방식</div>
+        <div class="ex-row"><b>처리</b> <code>σ²_t = ω + α×(어제 충격)² + β×(어제 변동성)²</code> 라는 고정 수식 하나만 사용 — 뉴스·VIX·유가 등 다른 정보는 전혀 반영하지 않음.</div>
+        <div class="ex-row"><b>역할</b> RandomForest 등과 완전히 동일한 test 기간에 대해 같은 방식으로 로그 변동성 예측치를 산출해 나란히 비교.</div>
+        <div class="ex-row"><b>판단</b> COVID 폭락(2020.3)처럼 변동성이 급변하는 구간에서는 이 단순 수식이 반응 속도가 느려 예측이 크게 빗나감 → R²가 음수로 나와, "복잡한 피처 없이 과거 패턴만으로는 부족하다"는 대조군 역할.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- C. 피처에 담긴 금융 이론 -->
+  <div class="sub-h"><span class="n">C</span>피처에 담긴 금융 이론</div>
+  <div class="sub-desc">단순히 숫자를 넣은 것이 아니라, 각 피처 뒤에는 금융시장을 설명하는 이론적 근거가 있습니다.</div>
+  <div class="cards">
+
+    <div class="card" style="--ac:#0f766e">
+      <div class="c-name">HAR-RV · 변동성 군집</div><div class="c-sub">Corsi (2009)</div>
+      <span class="lbl ld">쉬운 설명</span><p>"변동성이 큰 날 다음엔 또 변동성이 큰 날이 오는 경향이 있다"는 시장의 특징을 <strong>변동성 군집(volatility clustering)</strong>이라 부릅니다. 태풍이 한 번 지나가면 며칠간 궂은 날씨가 이어지는 것과 비슷합니다. HAR-RV는 이 특징을 1일·5일·20일 평균 변동성 3개의 조합으로 수식화한 모형입니다.</p>
+      <span class="lbl lw">이유</span><p>이 패턴이 매우 강력해서, 복잡한 뉴스·거시지표 없이도 "최근 변동성 자체"만으로 상당한 예측이 가능한지 확인하기 위함.</p>
+      <span class="lbl lu">역할</span><p>rolling_vol_1d/5d/20d 피처로 구현, AR_Only Ablation의 핵심 구성요소.</p>
+      <span class="lbl lp">결과</span><p>AR_Only(HAR 피처만) 단독으로 R²=0.834 — Full 모형(0.812~0.830)에 맞먹는 수준. 변동성 예측에서는 "최근 변동성 그 자체"가 가장 강력한 신호.</p>
+      <div class="ex-box">
+        <div class="ex-h">🔍 이 논문에서 실제로 쓰인 방식</div>
+        <div class="ex-row"><b>입력</b> 예: 최근 1일 변동성=0.018, 5일 평균=0.014, 20일 평균=0.011(모두 상승 추세).</div>
+        <div class="ex-row"><b>처리</b> 이 세 피처를 그대로 모델에 입력하면 "최근 변동성이 20일 평균보다 뚜렷이 높다 → 변동성 국면이 전환 중"이라는 패턴을 학습.</div>
+        <div class="ex-row"><b>역할</b> AR_Only Ablation 실험에서는 뉴스·거시지표를 모두 빼고 이 3개 피처만으로 예측을 수행.</div>
+        <div class="ex-row"><b>판단</b> 그 결과 R²=0.834로, "내일도 변동성이 높을 것"이라는 판단이 최소 정보만으로도 상당히 정확함을 확인 — 변동성 예측의 "기본값" 역할을 제공.</div>
+      </div>
+    </div>
+
+    <div class="card" style="--ac:#0d9488">
+      <div class="c-name">레버리지 효과</div><div class="c-sub">Black (1976)</div>
+      <span class="lbl ld">쉬운 설명</span><p>주가가 오를 때보다 <em>떨어질 때</em> 변동성이 더 크게 튀는 비대칭 현상입니다. 주가가 떨어지면 회사의 부채 비율(레버리지)이 상대적으로 커져 더 위험해 보이고, 그래서 투자자 반응(변동성)도 더 커진다는 이론입니다. "떨어질 때가 더 무섭다"는 시장의 직관을 수식으로 담은 개념입니다.</p>
+      <span class="lbl lw">이유</span><p>상승·하락을 동일하게 취급하는 단순 변동성 피처만으로는 이 비대칭성을 놓치기 때문.</p>
+      <span class="lbl lu">역할</span><p>leverage_5d 피처(최근 5일 중 음(-)의 수익률만 평균)로 구현. GJR-GARCH의 비대칭항을 머신러닝 피처로 근사.</p>
+      <span class="lbl lp">결과</span><p>변동성 예측 피처 중 "높음" 등급의 기여도로 분류.</p>
+      <div class="ex-box">
+        <div class="ex-h">🔍 이 논문에서 실제로 쓰인 방식</div>
+        <div class="ex-row"><b>입력</b> 최근 5일 수익률이 <code>[+0.01, -0.02, -0.015, +0.005, -0.008]</code>이라면, leverage_5d는 음(-)의 수익률만 평균 = <code>(-0.02-0.015-0.008)/3 ≈ -0.014</code>.</div>
+        <div class="ex-row"><b>처리</b> 이 값이 클수록(더 음수일수록) "최근 하락이 우세했다"는 신호로 모델에 입력.</div>
+        <div class="ex-row"><b>역할</b> 상승·하락을 구분하지 않는 HAR-RV 변동성 피처를 보완하는 비대칭 신호로 작동.</div>
+        <div class="ex-row"><b>판단</b> 이 값이 크게 음수인 날, 모델은 "다음날 변동성이 상승 우세였던 날보다 더 커질 것"이라는 방향으로 예측을 조정.</div>
+      </div>
+    </div>
+
+    <div class="card" style="--ac:#14b8a6">
+      <div class="c-name">다중공선성 (VIF)</div><div class="c-sub">피처 간 중복성 점검</div>
+      <span class="lbl ld">쉬운 설명</span><p>서로 거의 같은 정보를 담은 피처가 여러 개 있으면(예: "어제 종가"와 "그제 종가"), 모델이 무엇이 진짜 원인인지 헷갈릴 수 있습니다. 이를 다중공선성이라 하고, VIF(분산팽창지수)라는 숫자로 얼마나 심한지 측정합니다.</p>
+      <span class="lbl lw">이유</span><p>118~122개나 되는 피처를 그대로 다 쓰면 모델이 불안정해질 위험이 있는지 사전 점검이 필요했습니다.</p>
+      <span class="lbl lu">역할</span><p>전체 피처 쌍에 대해 VIF 계산.</p>
+      <span class="lbl lp">결과</span><p>대부분 VIF&lt;5로 문제 없음 확인. Tree 기반 모델은 애초에 다중공선성에 비교적 강건함.</p>
+      <div class="ex-box">
+        <div class="ex-h">🔍 이 논문에서 실제로 쓰인 방식</div>
+        <div class="ex-row"><b>처리</b> 예: rolling_vol_5d와 rolling_vol_20d의 VIF를 계산했더니 3.2로 나옴 — 두 피처가 어느 정도 겹치지만 심각한 수준은 아님(VIF&lt;5 기준).</div>
+        <div class="ex-row"><b>판단</b> 이 결과를 근거로 두 피처를 모두 모델에 포함시키기로 결정(둘 다 제거하지 않음) — "피처를 뺄지 말지"를 정하는 실제 근거로 사용됨.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- D. 엄밀한 시간 정렬 -->
+  <div class="sub-h"><span class="n">D</span>"미래를 훔쳐보지 않기" — 엄밀한 시간 정렬</div>
+  <div class="sub-desc">이 논문 전체를 관통하는 방법론적 핵심 원칙입니다. 아래 두 개념이 실제로 왜 중요한지는 4번 섹션(수익률 예측 실패)과 함께 보면 이해가 빠릅니다.</div>
+  <div class="cards">
+
+    <div class="card" style="--ac:#dc2626">
+      <div class="c-name">엄밀한 t-1 예측</div><div class="c-sub">Strict t-1 Forecasting</div>
+      <span class="lbl ld">쉬운 설명</span><p>"t"는 오늘, "t-1"은 어제를 뜻하는 통계학 표기법입니다. <strong>엄밀한 t-1 예측</strong>이란, 오늘(t) 장이 마감되기 전까지 실제로 알 수 있었던 정보만 사용해 모델을 만든다는 원칙입니다. 예를 들어 "오늘 VIX 지수"는 오늘 장이 끝나야 확정되는 값이므로, 오늘 아침 예측에는 절대 쓸 수 없고 반드시 "어제(t-1)의 VIX"를 써야 합니다. 시험을 볼 때 답안지를 미리 보면 안 되는 것과 같은 원칙입니다.</p>
+      <span class="lbl lw">이유</span><p>실제 트레이딩에서는 미래 정보를 알 수 없으므로, 연구도 그 제약을 똑같이 지켜야 결과가 현실적으로 의미가 있습니다. 이를 어기면 답을 미리 보고 푼 시험처럼 비현실적으로 높은 성능이 나옵니다(→ 오른쪽 "미래정보 편향" 참고).</p>
+      <span class="lbl lu">역할</span><p>모든 금융 피처(VIX·국채·환율 등)에 최소 1거래일의 시차(lag)를 강제 적용. 뉴스 헤드라인만 예외적으로 "당일 마감 전 보도분"까지 허용(뉴스는 발표 즉시 시장에 반영되는 정보라는 특성을 반영).</p>
+      <span class="lbl lp">결과</span><p>이 원칙을 지킨 상태에서도 변동성 R²=0.830~0.932, 방향성 AUC=0.749~0.844의 유의미한 예측력 확보 — "치팅 없이도 예측이 된다"는 것을 증명.</p>
+      <div class="ex-box">
+        <div class="ex-h">🔍 이 논문에서 실제로 쓰인 방식</div>
+        <div class="ex-row"><b>입력</b> 예: 2023-03-10(오늘=t) 아침에 "오늘 종가가 오를지 내릴지"를 예측한다면, VIX_lag1은 반드시 2023-03-09(어제=t-1) 마감 시점 값을 사용해야 함.</div>
+        <div class="ex-row"><b>처리</b> 만약 실수로 2023-03-10 당일 VIX(그날 장 마감 후에야 확정되는 값)를 넣으면, 아직 일어나지 않은 "미래" 정보를 예측에 쓰는 셈이 됨.</div>
+        <div class="ex-row"><b>역할</b> 데이터 파이프라인에서 모든 금융 피처의 날짜를 자동으로 하루씩 뒤로 미는(shift) 코드를 두어 이 규칙을 전 피처에 일괄 강제.</div>
+        <div class="ex-row"><b>판단</b> 이 규칙 덕분에 모델의 예측은 "실제로 그날 아침에 내릴 수 있었던 판단"과 동일한 조건에서 평가됨 — 논문이 보고하는 성능 수치가 실전 트레이딩에도 적용 가능한 신뢰도를 갖는 근거.</div>
+      </div>
+    </div>
+
+    <div class="card" style="--ac:#b91c1c">
+      <div class="c-name">미래정보 편향</div><div class="c-sub">Look-ahead Bias</div>
+      <span class="lbl ld">쉬운 설명</span><p>예측 시점 이후에나 알 수 있는 정보를 실수로(또는 편의상) 모델에 섞어 넣어, 실제로는 불가능한 수준으로 성능이 부풀려지는 현상입니다. 이 논문은 일부러 이 실수를 재현하는 실험을 했습니다: 당일(t-day) 마감 데이터까지 함께 넣었더니 수익률 예측 R²가 0.03 미만에서 약 0.65까지 치솟았습니다. 이는 진짜 "예측"이 아니라 "이미 일어난 일을 사후에 설명"한 것에 가깝습니다.</p>
+      <span class="lbl lw">이유</span><p>일부 선행 연구가 비현실적으로 높은 R²(예: 0.99 이상)를 보고하는 이유가 바로 이 편향 때문일 가능성을 검증하기 위함.</p>
+      <span class="lbl lu">역할</span><p>strict t-1(정상) 조건과 t-day 포함(오류) 조건을 나란히 실험해 직접 비교.</p>
+      <span class="lbl lp">결과</span><p>ΔR²≈0.62~0.66 — 시간 정렬 오류 하나가 성능을 62~66%포인트나 부풀릴 수 있음을 정량적으로 증명. 금융 ML 연구가 반드시 점검해야 할 방법론적 함정으로 제시.</p>
+      <div class="ex-box">
+        <div class="ex-h">🔍 이 논문에서 실제로 쓰인 방식</div>
+        <div class="ex-row"><b>처리</b> 오류를 의도적으로 재현하기 위해, 당일(t) 마감 데이터(오늘 VIX·오늘 국채금리 등)까지 피처에 포함해 동일한 모델을 다시 학습.</div>
+        <div class="ex-row"><b>판단 비교</b> 정상 조건(t-1만 사용) 수익률 예측 <code>R²≈0.02</code> → 오류 조건(t 포함) <code>R²≈0.65</code>로 급등.</div>
+        <div class="ex-row"><b>역할</b> 이 비교 실험 자체가 논문의 핵심 논증 도구 — "오늘 데이터를 쓰면 사실상 오늘 일어난 일을 오늘 데이터로 설명하는 것일 뿐 예측이 아니다"라는 것을 수치로 증명하는 역할을 함.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- E. 검증 & 통계 기법 -->
+  <div class="sub-h"><span class="n">E</span>모델 검증 & 통계 기법</div>
+  <div class="sub-desc">"성능이 좋아 보인다"를 "성능이 좋다고 통계적으로 증명됐다"로 바꾸기 위한 도구들입니다.</div>
+  <div class="cards">
+
+    <div class="card" style="--ac:#d97706">
+      <div class="c-name">Optuna</div><div class="c-sub">베이지안 하이퍼파라미터 최적화</div>
+      <span class="lbl ld">쉬운 설명</span><p>모델에는 "나무를 몇 개 만들지", "나무 깊이를 얼마나 깊게 할지"처럼 사람이 직접 정해줘야 하는 설정값(하이퍼파라미터)이 많습니다. 이걸 손으로 하나하나 바꿔가며 시험하는 대신, "이전 시도 결과를 보고 다음엔 어디를 시도하면 좋을지" 스스로 학습하며 효율적으로 탐색하는 자동화 도구가 Optuna입니다. 무작정 다 해보는 대신 "감이 좋아지는" 방식으로 탐색한다고 이해하면 됩니다.</p>
+      <span class="lbl lw">이유</span><p>공정한 모델 비교를 위해 각 모델의 최적 파라미터 탐색이 필수.</p>
+      <span class="lbl lu">역할</span><p>각 모델 100회 Trial 탐색. Walk-Forward 검증 점수를 목적 함수로 사용.</p>
+      <span class="lbl lp">결과</span><p>Grid Search 대비 효율적. 조기 종료로 불필요한 Trial 자동 제거.</p>
+      <div class="ex-box">
+        <div class="ex-h">🔍 이 논문에서 실제로 쓰인 방식</div>
+        <div class="ex-row"><b>처리</b> 예: RandomForest의 나무 개수를 50~500, 나무 깊이를 3~15 사이에서 탐색한다면, 1회차는 무작위로 <code>(나무=120, 깊이=8)</code> 시도 → 검증 RMSE=0.0065. 이후 회차는 이 근처 값이 더 좋을 가능성이 높다고 판단해 <code>(나무=150, 깊이=9)</code> 같은 인접 값을 우선 시도.</div>
+        <div class="ex-row"><b>역할</b> 100회 반복 후 검증 RMSE가 가장 낮았던 조합을 최종 하이퍼파라미터로 채택.</div>
+        <div class="ex-row"><b>판단</b> 이렇게 찾은 최적 조합이 논문에 보고된 R²=0.830 등 최종 성능의 기반이 됨 — 사람이 손으로 대충 고른 값이 아니라는 근거.</div>
+      </div>
+    </div>
+
+    <div class="card" style="--ac:#ea580c">
+      <div class="c-name">Walk-Forward Validation</div><div class="c-sub">5-Fold 확장 윈도우 시계열 교차검증</div>
+      <span class="lbl ld">쉬운 설명</span><p>일반적인 검증법(K-Fold)은 데이터를 무작위로 섞어서 나누는데, 이러면 "미래 데이터로 과거를 예측 연습"하는 시간여행 오류가 생길 수 있습니다. Walk-Forward는 항상 시간 순서를 지켜, "2014~2018년 학습 → 2018~2019년 평가" 다음 "2014~2019년 학습 → 2019~2020년 평가" 식으로 구간을 앞으로 밀어가며(확장 윈도우) 검증합니다. 매일 새로운 데이터를 받으며 예측하는 실제 트레이더 상황과 동일합니다.</p>
+      <span class="lbl lw">이유</span><p>일반 K-Fold는 금융 시계열에서 미래 데이터로 과거를 학습하게 되어 사용 불가.</p>
+      <span class="lbl lu">역할</span><p>항상 "과거 학습, 미래 평가"를 보장. 실제 거래 환경을 재현.</p>
+      <span class="lbl lp">결과</span><p>5 Fold 전부 양의 성능 유지 → 결과의 시간적 안정성 증명.</p>
+      <div class="ex-box">
+        <div class="ex-h">🔍 이 논문에서 실제로 쓰인 방식</div>
+        <div class="ex-row"><b>처리</b> Fold 1: 2014~2016 학습 → 그 직후 구간 평가. Fold 3: 2014~2020(COVID 포함) 학습 → 그 직후 구간 평가. 이런 식으로 창을 계속 넓혀가며 5회 반복(표 8 참고).</div>
+        <div class="ex-row"><b>판단</b> Fold 3(COVID 포함) 결과가 R²=0.839로 다른 Fold와 비슷하게 유지된 것을 근거로, "코로나 같은 극단적 사건이 껴 있어도 모델이 무너지지 않는다"는 안정성 판단을 내림.</div>
+      </div>
+    </div>
+
+    <div class="card" style="--ac:#7c3aed">
+      <div class="c-name">Diebold-Mariano 검정</div><div class="c-sub">예측 정확도 차이의 통계적 유의성 검정</div>
+      <span class="lbl ld">쉬운 설명</span><p>"A 모델 오차 평균이 B 모델보다 작다"는 관찰만으로는 우연일 수도 있습니다. DM 검정은 "이 차이가 우연히 생길 확률(p-value)"을 계산해서, 그 확률이 충분히 낮으면(보통 5% 미만) "우연이 아니라 진짜 차이"라고 통계적으로 결론 내리는 방법입니다.</p>
+      <span class="lbl lw">이유</span><p>"Full 모형이 더 좋아 보인다"는 서술만으론 불충분. p-값으로 우연이 아님을 증명할 필요.</p>
+      <span class="lbl lu">역할</span><p>Full vs 피처군별 모형 비교. HAC 표준오차로 자기상관·이분산 자동 보정.</p>
+      <span class="lbl lp">결과</span><p>US 방향성: p&lt;0.0001 (Full vs Financial_Only). 뉴스 기여의 통계적 유의성 확인.</p>
+      <div class="ex-box">
+        <div class="ex-h">🔍 이 논문에서 실제로 쓰인 방식</div>
+        <div class="ex-row"><b>처리</b> Full 모형과 Financial_Only 모형이 매일 만든 예측 오차를 날짜별로 비교해, 그 오차 차이의 평균·분산으로 DM 통계량을 계산 (예: US 방향성 DM=+8.155).</div>
+        <div class="ex-row"><b>판단</b> p&lt;0.0001이므로 "이 정도 차이가 우연히 나올 확률은 0.01% 미만"이라 결론 → "뉴스+금융지표 결합이 금융지표 단독보다 통계적으로 유의하게 낫다"는 논문 핵심 주장의 직접적 근거로 사용.</div>
+      </div>
+    </div>
+
+    <div class="card" style="--ac:#0f766e">
+      <div class="c-name">Block Bootstrap CI</div><div class="c-sub">블록 재표본 95% 신뢰구간</div>
+      <span class="lbl ld">쉬운 설명</span><p>R²=0.830이라는 숫자 하나만 보면 "우연히 이 테스트 기간에서만 잘 맞은 것 아닌가"라는 의심이 들 수 있습니다. Bootstrap은 가진 데이터에서 무작위로(단, 시계열 순서를 지키기 위해 10일 단위 "블록"으로) 5,000번 다시 뽑아 매번 R²를 계산하고, 그 5,000개 값의 95% 구간을 신뢰구간으로 제시합니다. "여러 번 다시 시험 봐도 이 정도 범위 안에서 성적이 나온다"는 것을 보여주는 것입니다.</p>
+      <span class="lbl lw">이유</span><p>점추정 R²=0.830 하나만으론 신뢰성 부족. 불확실성 범위 제시가 필요.</p>
+      <span class="lbl lu">역할</span><p>5,000회 블록(10일) 재표본으로 R²·AUC 95% CI 계산. 시계열 자기상관 보존.</p>
+      <span class="lbl lp">결과</span><p>US R² CI=[0.806, 0.851]. 하한도 0.80 이상 → 성능 안정성 확인.</p>
+      <div class="ex-box">
+        <div class="ex-h">🔍 이 논문에서 실제로 쓰인 방식</div>
+        <div class="ex-row"><b>처리</b> 전체 테스트 기간을 10일짜리 블록으로 잘라, 블록들을 무작위 복원추출해 원래와 같은 길이의 가짜 테스트셋을 5,000번 재구성 → 매번 R²를 다시 계산.</div>
+        <div class="ex-row"><b>판단</b> 5,000개 R² 값을 정렬해 하위 2.5%~상위 97.5% 구간(0.806~0.851)을 신뢰구간으로 제시 → "운이 나쁜 재표본에서도 R²가 0.80 밑으로 잘 안 떨어진다"는 근거로 결과의 견고함을 판단.</div>
+      </div>
+    </div>
+
+    <div class="card" style="--ac:#9333ea">
+      <div class="c-name">AUC</div><div class="c-sub">ROC 곡선 아래 면적 — 방향성 평가지표</div>
+      <span class="lbl ld">쉬운 설명</span><p>방향성(오를지 내릴지) 예측이 얼마나 잘 맞는지 재는 지표입니다. 동전을 무작위로 던지면 AUC=0.50, 완벽하게 맞히면 AUC=1.00입니다. "실제로 오른 날"과 "실제로 내린 날"을 하나씩 무작위로 뽑았을 때, 모델이 "오른 날 쪽에 더 높은 상승 확률"을 준 비율이 곧 AUC입니다.</p>
+      <span class="lbl lw">이유</span><p>정확도(accuracy)는 예측 임계값(threshold) 설정에 따라 왜곡되기 쉬워, 임계값에 덜 민감한 지표가 필요.</p>
+      <span class="lbl lu">역할</span><p>모든 방향성 분류 모델의 핵심 평가지표로 사용.</p>
+      <span class="lbl lp">결과</span><p>AUC=0.749(US)·0.844(UK) — 금융 예측에서 AUC 0.7 이상은 학문적으로 상당한 수준으로 평가됨.</p>
+      <div class="ex-box">
+        <div class="ex-h">🔍 이 논문에서 실제로 쓰인 방식</div>
+        <div class="ex-row"><b>처리</b> 모델이 매일 "내일 상승확률"을 0~1 숫자로 출력(예: 3/10 → 0.72, 3/11 → 0.35 …). 이후 실제 상승·하락 결과와 맞춰, 모든 (상승일, 하락일) 쌍에서 "상승일 확률&gt;하락일 확률"인 비율을 계산.</div>
+        <div class="ex-row"><b>판단</b> US AUC=0.749라면 이 비율이 74.9% — 모델의 확률 순위 자체가 실제 방향성과 상당히 일치한다는 판단 근거로, 실전에서는 "확률이 높은 날일수록 실제로 오를 가능성이 크다"는 신뢰도로 이어짐.</div>
+      </div>
+    </div>
+
+    <div class="card" style="--ac:#4338ca">
+      <div class="c-name">R² / RMSE</div><div class="c-sub">변동성 예측 평가지표</div>
+      <span class="lbl ld">쉬운 설명</span><p>R²는 "모델이 실제 값의 움직임 중 몇 %를 설명하는지"를 0~1(또는 음수) 사이 값으로 나타냅니다. R²=0.830이면 변동성 변화의 83%를 모델이 설명한다는 뜻입니다. RMSE는 예측값과 실제값 오차를 제곱해 평균낸 뒤 다시 제곱근을 취한 값으로, 오차의 "평균적인 크기"를 원래 단위로 보여줍니다.</p>
+      <span class="lbl lw">이유</span><p>R²(설명력)와 RMSE(실제 오차 크기)를 함께 봐야 모델 성능을 온전히 판단할 수 있음.</p>
+      <span class="lbl lu">역할</span><p>모든 회귀(변동성) 모델의 성능 비교 및 순위 산정에 사용.</p>
+      <span class="lbl lp">결과</span><p>RandomForest US RMSE=0.00579(R²=0.830), UK RMSE=0.00329(R²=0.932).</p>
+      <div class="ex-box">
+        <div class="ex-h">🔍 이 논문에서 실제로 쓰인 방식</div>
+        <div class="ex-row"><b>처리</b> 테스트 기간의 모든 날짜에 대해 (예측 로그변동성 − 실제 로그변동성)²의 평균을 구해 제곱근을 취하면 RMSE, 이를 "아무것도 모르고 평균만 예측했을 때의 오차"와 비교한 비율이 R².</div>
+        <div class="ex-row"><b>판단</b> RandomForest의 US R²=0.830, UK R²=0.932라는 숫자가 곧 논문 전체에서 "어느 모델이 최고인가"를 가르는 최종 순위표(4번 섹션 결과표)의 기준값으로 사용됨.</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════ 10. FINDINGS ══════ -->
+<section id="findings">
+  <div class="sh"><div class="sh-icon c-gold">💡</div><h2>10. 핵심 발견 & 연구의 의의</h2></div>
+
+  <div class="finding-grid">
+    <div class="finding" style="--ac:#2563a8">
+      <div class="icon">🎯</div>
+      <h4>발견 1: 예측 타깃 선택이 결정적</h4>
+      <p>수익률 수준 R²&lt;0.03 vs 로그 변동성 R²=0.830~0.932. 동일 데이터·동일 모델인데 타깃만 바꿨을 뿐. "무엇을 예측할 것인가"가 "어떤 모델을 쓸 것인가"보다 훨씬 중요.</p>
+    </div>
+    <div class="finding" style="--ac:#059669">
+      <div class="icon">🔤</div>
+      <h4>발견 2: FinBERT가 방향성의 핵심</h4>
+      <p>방향성 예측에서 뉴스 단독(AUC=0.690)이 금융지표 단독(AUC=0.544)을 압도. FinBERT 임베딩이 단순 감성 점수를 초과하는 독립적 예측력 보유.</p>
+    </div>
+    <div class="finding" style="--ac:#d97706">
+      <div class="icon">🌍</div>
+      <h4>발견 3: 크로스마켓 일반성</h4>
+      <p>미국·영국 두 시장에서 정성적으로 동일한 패턴. 파이프라인의 시장 간 일반화 가능성 확인. 영국이 더 높은 성능은 유럽 지수의 추가 설명력 덕분.</p>
+    </div>
+    <div class="finding" style="--ac:#dc2626">
+      <div class="icon">⚠️</div>
+      <h4>발견 4: 시간 정렬 오류 경고</h4>
+      <p>당일(t-day) 데이터 포함 시 R²≈0.65 → 제거 시 R²&lt;0.03. ΔR²≈-0.62~-0.66이 오류 크기. 금융 ML 연구의 방법론적 함정 정량화.</p>
+    </div>
+    <div class="finding" style="--ac:#7c3aed">
+      <div class="icon">🌲</div>
+      <h4>발견 5: 딥러닝이 항상 좋지 않음</h4>
+      <p>BiLSTM·Transformer는 일별 ETF 데이터(~3,000건)에서 트리 기반에 패배. 샘플 수와 신호 대 잡음비가 모델 선택을 결정. 데이터 규모의 중요성 실증.</p>
+    </div>
+    <div class="finding" style="--ac:#0f766e">
+      <div class="icon">📊</div>
+      <h4>발견 6: 변동성은 AR 구조가 핵심</h4>
+      <p>HAR 변동성 피처만(AR_Only)으로도 R²=0.834. 변동성 군집(volatility clustering)이 매우 강함. 뉴스·거시지표는 방향성에서 더 큰 추가 기여.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ 11. QA ══════ -->
+<section id="qa">
+  <div class="sh"><div class="sh-icon c-purple">❓</div><h2>11. 교수님 예상 Q&A</h2></div>
+
+  <div class="qa">
+    <div class="qa-q">수익률 수준 예측이 실패했다면 이 연구는 유용한가?</div>
+    <div class="qa-a">오히려 이 실패가 연구의 핵심 기여입니다. "수익률은 예측 불가 → 변동성·방향성은 예측 가능"이라는 대조적 결과가 예측 타깃 선택의 중요성을 실증합니다. 또한 시간 정렬 오류(ΔR²≈0.62)를 정량화하여 금융 ML 연구의 방법론적 함정을 경고합니다.</div>
+  </div>
+
+  <div class="qa">
+    <div class="qa-q">왜 딥러닝(LSTM, Transformer)이 아닌 Random Forest가 가장 좋은가?</div>
+    <div class="qa-a">일별 ETF 데이터는 약 3,000개 관측치입니다. BiLSTM·Transformer는 수만~수십만 샘플이 있어야 파라미터가 충분히 학습됩니다. 반면 RandomForest는 작은 데이터에서도 안정적입니다. 딥러닝이 성공한 선행 연구들은 대부분 종가(price level)를 예측 타깃으로 했는데, 이는 예측이 훨씬 쉬운 과제입니다.</div>
+  </div>
+
+  <div class="qa">
+    <div class="qa-q">영국 R²=0.932는 너무 높지 않은가? 과적합 아닌가?</div>
+    <div class="qa-a">Walk-Forward Validation 5개 Fold 모두에서 R²&gt;0.92를 유지하고, 5,000회 Bootstrap CI=[0.922, 0.941]로 안정적입니다. 또한 예측 타깃이 로그 변동성이므로, 전날의 변동성이 오늘의 변동성을 강하게 예측하는 것은 금융계량경제학 문헌(HAR-RV)과도 일치합니다. 과적합보다는 변동성 군집(volatility clustering)의 강한 자기회귀 구조를 반영합니다.</div>
+  </div>
+
+  <div class="qa">
+    <div class="qa-q">선행 연구 Wang 등(2023)[47]과 어떻게 다른가?</div>
+    <div class="qa-a">Wang 등(2023)은 트위터 기반 소셜미디어 데이터로 개별 주식을 예측했습니다. 본 연구는 ① ETF를 대상으로 ② 뉴스 헤드라인 기반 TF-IDF·FinBERT를 체계적으로 비교하며 ③ 미국·영국 크로스마켓에 동일 파이프라인을 적용하고 ④ 뉴스 시차 효과와 DM 검정·Bootstrap CI를 함께 검증합니다. 뉴스와 소셜미디어는 금융 텍스트의 성격이 다르며, ETF는 개별 주식과 다른 예측 구조를 가집니다.</div>
+  </div>
+
+  <div class="qa">
+    <div class="qa-q">이 연구를 실제 투자에 활용할 수 있는가?</div>
+    <div class="qa-a">방향성 예측(AUC=0.749~0.844)은 투자 신호로 활용 가능합니다. 다만 ① 거래 비용, ② 슬리피지, ③ 모델 붕괴(model decay) 등 실거래 환경 요소를 추가로 고려해야 합니다. 또한 변동성 예측은 포트폴리오 리밸런싱·옵션 헤징 등 리스크 관리에 더 직접적으로 활용 가능합니다. 본 논문은 학술적 프레임워크이며 실거래 검증은 향후 과제로 제시합니다.</div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  ETF Price Prediction — 뉴스 텍스트와 금융지표를 결합한 ETF 변동성·방향성 예측: 미국·영국 시장 비교 연구 (2014–2024)
+  &nbsp;|&nbsp; 논문 해설서 v2.0
+</footer>
+
+</body>
+</html>

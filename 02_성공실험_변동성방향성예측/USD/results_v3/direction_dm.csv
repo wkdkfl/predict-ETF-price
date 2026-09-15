@@ -1,0 +1,5 @@
+market,baseline,model,DM_stat,p_value,best_wins
+US,XGBoost,RandomForest,3.6979022822686307,0.0002484694844737678,True
+US,LightGBM,RandomForest,2.0430913991478654,0.04171336288856797,True
+US,Logit,RandomForest,10.793521861791133,0.0,True
+US,Stacking,RandomForest,8.11561638667003,6.439293542825908e-15,True

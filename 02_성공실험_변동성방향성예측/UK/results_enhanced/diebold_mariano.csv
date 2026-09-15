@@ -1,0 +1,6 @@
+market,baseline,model,DM_stat,p_value,favors_model,interpretation
+UK,Ridge,RandomForest,22.986893197608588,0.0,True,
+UK,Ridge,XGBoost,23.009190424956817,0.0,True,
+UK,Ridge,LightGBM,22.995975293220084,0.0,True,
+UK,Ridge,Stacking,22.95625098704044,0.0,True,
+UK,XGB_NoNews,XGB_Full,-0.750527560710907,0.45362096243660366,False,"If favors_model=True, news features add significant value."

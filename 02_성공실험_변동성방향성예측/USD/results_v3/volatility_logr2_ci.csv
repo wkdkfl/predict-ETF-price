@@ -1,0 +1,2 @@
+market,model,metric,point,ci_low,ci_high,n_boot,block_size,seed,n_test
+US,RandomForest,r2_log,0.8295,0.7826,0.8765,5000,10,42,392
