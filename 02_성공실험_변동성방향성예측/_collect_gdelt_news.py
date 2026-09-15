@@ -14,6 +14,7 @@
 ------
   python _collect_gdelt_news.py            # timeline 모드 (권장, 요청 수십 건)
   python _collect_gdelt_news.py --artlist  # 일별 헤드라인 수집 (요청 수천 건, 느림)
+    python _collect_gdelt_news.py --smoke-test  # 단일 기간 요청으로 연결·추출만 점검
 
 주의
 ----
@@ -158,8 +159,38 @@ def run_artlist():
             print("    저장: %s (%d건)" % (out, len(rows)))
 
 
+def run_smoke_test():
+    """Issue two small requests only; do not write data files or start a collection."""
+    start = date(2024, 1, 2)
+    end = date(2024, 1, 3)
+    print("GDELT 연결·추출 점검: %s ~ %s" % (start, end))
+    for sub, cfg in MARKETS.items():
+        response = call({
+            "query": cfg["queries"]["market"],
+            "mode": "artlist",
+            "format": "json",
+            "maxrecords": 10,
+            "sort": "hybridrel",
+            "startdatetime": start.strftime("%Y%m%d") + "000000",
+            "enddatetime": end.strftime("%Y%m%d") + "235959",
+        })
+        if response is None:
+            print("  %s: 실패 (네트워크 또는 GDELT 레이트 리밋)" % cfg["label"])
+            continue
+        articles = response.get("articles", [])
+        print("  %s: 성공, %d건 수신" % (cfg["label"], len(articles)))
+        for article in articles[:3]:
+            print("    - %s [%s]" % (article.get("title", "")[:120], article.get("domain", "")))
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--artlist", action="store_true", help="일별 헤드라인 수집 모드")
+    ap.add_argument("--smoke-test", action="store_true", help="GDELT 연결·추출 점검만 실행")
     a = ap.parse_args()
-    run_artlist() if a.artlist else run_timeline()
+    if a.smoke_test:
+        run_smoke_test()
+    elif a.artlist:
+        run_artlist()
+    else:
+        run_timeline()
