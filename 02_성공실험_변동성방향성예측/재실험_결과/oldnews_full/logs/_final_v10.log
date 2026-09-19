@@ -1,0 +1,34 @@
+학습 < 2022-05-19 | 검증 < 2024-03-07 | 시험 >= 2024-03-07
+피처: AR 25 / 금융 15 / 감성 16 / 임베딩 15  (공통 71)
+
+============================================================================================
+  변동성(5일 RV) 예측 — pooled + 보정, 두 시장 동일 절차
+  피처군              시장              R²                 95% CI        상관
+  AR_Only          US         +0.3230   [+0.0644, +0.4676] *    0.591
+  AR_Only          UK         +0.0429   [-0.2237, +0.2057]    0.280
+  Financial_Only   US         +0.0852   [-0.2738, +0.2830]    0.440
+  Financial_Only   UK         -0.1325   [-0.4974, +0.0587]    0.154
+  News_Pure        US         +0.1619   [-0.1232, +0.3246]    0.479
+  News_Pure        UK         -0.0584   [-0.3228, +0.0712]    0.140
+  AR+News          US         +0.3300   [+0.0984, +0.4532] *    0.590
+  AR+News          UK         +0.0124   [-0.2333, +0.1641]    0.258
+  Full             US         +0.3691   [+0.1536, +0.4834] *    0.611
+  Full             UK         -0.1529   [-0.6238, +0.0911]    0.252
+  Financial_Clean  US         +0.1061   [-0.1781, +0.2410]    0.435
+  Financial_Clean  UK         -0.1089   [-0.4432, +0.0552]    0.160
+  (* = 95% 신뢰구간이 0을 포함하지 않음)
+
+============================================================================================
+  Diebold-Mariano 검정 (기준 vs AR+News / Full) — 뉴스 증분 기여
+  US   AR_Only          vs AR+News    DM= +0.263  p=0.7930  유의차 없음
+  US   AR_Only          vs Full       DM= +1.300  p=0.1941  유의차 없음
+  US   Financial_Only   vs Full       DM= +3.945  p=0.0001  Full 우위
+  US   News_Pure        vs Full       DM= +3.266  p=0.0012  Full 우위
+  US   Financial_Clean  vs Full       DM= +3.462  p=0.0006  Full 우위
+  UK   AR_Only          vs AR+News    DM= -0.654  p=0.5133  유의차 없음
+  UK   AR_Only          vs Full       DM= -2.306  p=0.0216  AR_Only 우위
+  UK   Financial_Only   vs Full       DM= -0.281  p=0.7789  유의차 없음
+  UK   News_Pure        vs Full       DM= -1.062  p=0.2887  유의차 없음
+  UK   Financial_Clean  vs Full       DM= -0.568  p=0.5702  유의차 없음
+
+저장: _final_v10_volatility.csv, _final_v10_dm.csv

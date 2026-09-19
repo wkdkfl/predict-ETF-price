@@ -1,0 +1,55 @@
+{
+  "variant": "newsv2_full",
+  "settings": {
+    "NEWS_DATA": "new",
+    "PCA_SOLVER": "full"
+  },
+  "python": "3.12.6",
+  "packages": {
+    "numpy": "2.5.3",
+    "pandas": "3.0.6",
+    "scipy": "1.18.1",
+    "sklearn": "1.9.1",
+    "lightgbm": "4.6.0",
+    "arch": "8.0.0",
+    "torch": "2.14.0+cpu",
+    "transformers": "5.17.0"
+  },
+  "steps": [
+    {
+      "step": "_final_v10.py",
+      "returncode": 0,
+      "seconds": 142.6
+    },
+    {
+      "step": "_final_v10_direction.py",
+      "returncode": 0,
+      "seconds": 299.1
+    },
+    {
+      "step": "_save_folds_v10.py",
+      "returncode": 0,
+      "seconds": 88.4
+    },
+    {
+      "step": "_garch_aligned_v6.py",
+      "returncode": 0,
+      "seconds": 47.9
+    },
+    {
+      "step": "_pooled_calibrated_v9.py",
+      "returncode": 0,
+      "seconds": 42.2
+    },
+    {
+      "step": "_robustness_v13.py",
+      "returncode": 0,
+      "seconds": 108.8
+    },
+    {
+      "step": "_figs_8_10_v10.py",
+      "returncode": 0,
+      "seconds": 11.5
+    }
+  ]
+}
