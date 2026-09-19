@@ -18,6 +18,7 @@ warnings.filterwarnings("ignore")
 BASE = Path(__file__).resolve().parent
 sys.path.insert(0, str(BASE))
 import lightgbm as lgb  # noqa: E402
+from _news_variant import RES, DATA_SFX  # noqa: E402
 
 OUT = Path(os.environ.get("FIG_OUT", BASE))
 SEED = 42
@@ -36,7 +37,7 @@ def build(mc):
 
 
 def real_news_dates(sub):
-    h = pd.read_csv(BASE / sub / "news_per_headline.csv", usecols=["date"])
+    h = pd.read_csv(BASE / sub / f"news_per_headline{DATA_SFX}.csv", usecols=["date"])
     return set(pd.to_datetime(h["date"], errors="coerce").dropna().dt.normalize())
 
 
@@ -71,9 +72,11 @@ for m in ["US", "UK"]:
     PR[m] = dict(prob=plat.predict_proba(p_te.reshape(-1, 1))[:, 1],
                  raw=p_te, y=Y[m][te],
                  date=frames[m]["Date"].values[te])
+    _pd_dir = RES / ("USD" if m == "US" else "UK") / "results_v6"
+    _pd_dir.mkdir(parents=True, exist_ok=True)
     pd.DataFrame({"Date": PR[m]["date"], "actual_dir5": PR[m]["y"],
                   "prob": PR[m]["prob"]}).to_csv(
-        BASE / ("USD" if m == "US" else "UK") / "results_v6" / "direction5_predictions_v10.csv",
+        _pd_dir / "direction5_predictions_v10.csv",
         index=False)
     print("  %s 예측 저장: n=%d  AUC=%.3f" % (m, len(PR[m]["y"]),
                                           roc_auc_score(PR[m]["y"], PR[m]["raw"])))

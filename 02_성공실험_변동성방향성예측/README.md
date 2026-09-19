@@ -70,7 +70,9 @@
 - `_figs_8_10_v10.py` — 도판
 
 **보조**
-- `_collect_gdelt_news.py` — 뉴스 커버리지 보강용 (개인 네트워크에서 실행 필요)
+- `_collect_gdelt_news.py` — 뉴스 커버리지 보강용 (개인 네트워크에서 실행 필요).
+  **2026-09-20 실측: GDELT DOC API 는 2017-01-01 이전 시작일을 거부하고 IP 레이트 리밋(429)이 심해 목적을 달성할 수 없었다.**
+  2014~2025 일별 뉴스는 `../공통데이터/collect_economic_news.py` 로 수집했다(아래 '재실험' 절)
 - `_구버전_스크립트/` — v3~v9 및 탐색 단계 스크립트 보관
 
 ## 결과 파일
@@ -102,6 +104,35 @@
 - pooled 학습으로 미국 R² 0.222 → 0.363 — 변동성 동학의 교차 시장 전이
 - **FTSE 250(MIDD) 강건성 검정**: AR_Only +0.007 (CI −0.264~+0.186), Full −0.319.
   영국의 결과는 ISF 고유의 것이 아니며 표적 지수를 바꿔도 재현된다.
+
+## 재실험 — 신규 일별 경제 뉴스 (2026-09-20)
+
+기존 뉴스의 커버리지 공백(미국 221일 / 영국 713일)을 메운 `공통데이터/` 의 2014–2025 일별 경제 뉴스
+(미국 NYT / 영국 Guardian, 매 달력일 ≥1건)로 §4.5 실험 전체를 다시 수행했다.
+**결과와 해석은 `재실험_결과/SUMMARY.md`.** 위의 기존 결과 파일과 '주요 결과'는 그대로 두었다.
+
+```
+python _build_news_features_newsv2.py   # FinBERT(ProsusAI/finbert) + 뉴스 병합 -> *_newsv2 파일 (CPU 약 20분)
+python _run_reexperiment.py             # 4개 variant x 7단계 -> 재실험_결과/<variant>/
+python _summarize_reexperiment.py       # 재실험_결과/SUMMARY.md 생성
+```
+
+- variant 4개: `{oldnews, newsv2} x {PCA solver full, auto}`. 주 비교는 `oldnews_full` vs `newsv2_full`(같은 환경·절차, 뉴스만 다름).
+  auto 는 scikit-learn 버전에 따라 내부 구현이 달라지므로 구현 민감도(잡음 하한) 측정용이다.
+- 시장 데이터는 고정(원본과 비트 단위 동일 확인). 표본이 같아 분할 컷오프도 동일(학습 <2022-05-19, 검증 <2024-03-07).
+- 스크립트는 환경 변수로 입력·출력을 분기한다(`_news_variant.py`). **변수를 주지 않으면 기존 동작과 완전히 같다.**
+  `NEWS_DATA=old|new`, `PCA_SOLVER=auto|full`, `RESULT_DIR`, `EXTRA_CLEAN_FIN=1`(뉴스 파생 열 2개를 뺀 `Financial_Clean` 그룹을 **추가 행으로** 계산)
+- 병합 단계(뉴스 -> `research_enhanced`)를 만드는 스크립트가 저장소에 없어서 `_build_news_features_newsv2.py` 로 재구성했다.
+  비거래일 뉴스는 다음 거래일에 합산하고, 전방 보간은 하지 않는다.
+- FinBERT 가중치(`USD/finbert/pytorch_model.bin`, ProsusAI/finbert)는 git 에서 제외돼 있다. `공통데이터/USD/download_finbert.py` 는
+  다른 모델(finbert-tone)을 받으므로 쓰지 말고 `huggingface_hub.hf_hub_download('ProsusAI/finbert', 'pytorch_model.bin', local_dir='USD/finbert')` 를 쓴다.
+  기존 헤드라인 300건으로 확률을 재계산해 최대 오차 6.9e-06 으로 일치함을 확인했다.
+- 실행 환경은 `requirements_reexperiment.txt` (Python 3.12). 아래 '재현 시 유의'의 3.7.4 환경과 다르며,
+  임베딩 PCA 를 쓰는 뉴스 포함 피처군은 그 차이만으로 R² 가 최대 약 0.05 달라진다(`SUMMARY.md` F·G절).
+
+### 재실험에서 발견한 프로토콜 이슈
+- `Financial_Only` 그룹에 뉴스 파생 열 `sent_x_vix`, `sent_x_vol` 이 섞여 있다(`NEWS_SENT_COLS` 미등록).
+  v10 부터 존재하던 문제이며 기존 그룹 값은 바꾸지 않고 `Financial_Clean` 을 추가로 계산했다.
 
 ## 재현 시 유의
 

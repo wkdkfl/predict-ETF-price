@@ -36,6 +36,7 @@ warnings.filterwarnings("ignore")
 BASE = Path(__file__).resolve().parent
 sys.path.insert(0, str(BASE))
 import lightgbm as lgb  # noqa: E402
+from _news_variant import RES  # noqa: E402
 
 SEED = 42
 KW = dict(n_estimators=600, max_depth=5, learning_rate=0.04, subsample=0.8,
@@ -109,7 +110,7 @@ def main():
             run(Xp, yp, "pooled")
 
     out = pd.DataFrame(rows)
-    out.to_csv(BASE / "_pooled_calibrated_v9_results.csv", index=False, encoding="utf-8-sig")
+    out.to_csv(RES / "_pooled_calibrated_v9_results.csv", index=False, encoding="utf-8-sig")
     print("\n" + "=" * 84)
     print(out[["market", "features", "model", "r2_raw", "r2_calibrated", "corr", "ceiling"]]
           .round(4).to_string(index=False))

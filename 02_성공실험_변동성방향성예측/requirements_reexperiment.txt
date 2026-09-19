@@ -1,0 +1,17 @@
+# 재실험(2026-09-20) 실행 환경 — Python 3.12.6, Windows 11, CPU 전용
+# 원 실험(Python 3.7.4 / scikit-learn 1.0.2)과 다르다. PCA 솔버 차이 때문에 뉴스 포함 피처군의 수치가 달라질 수 있다.
+numpy==2.5.3
+pandas==3.0.6
+scipy==1.18.1
+scikit-learn==1.9.1
+lightgbm==4.6.0
+arch==8.0.0
+matplotlib
+pyarrow
+statsmodels
+
+# FinBERT (ProsusAI/finbert) 추론
+torch==2.14.0
+transformers==5.17.0
+huggingface_hub==1.32.0
+safetensors

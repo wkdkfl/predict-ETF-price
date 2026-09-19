@@ -11,6 +11,7 @@ warnings.filterwarnings("ignore")
 BASE = Path(__file__).resolve().parent
 sys.path.insert(0, str(BASE))
 import lightgbm as lgb  # noqa: E402
+from _news_variant import RES  # noqa: E402
 
 SEED = 42
 KW = dict(n_estimators=600, max_depth=5, learning_rate=0.04, subsample=0.8,
@@ -53,7 +54,7 @@ for mc in ["US", "UK"]:
                  rec["AR_Only_r2"], rec["Full_r2"]))
 
 df = pd.DataFrame(rows)
-df.to_csv(BASE / "_final_v10_folds.csv", index=False, encoding="utf-8-sig")
+df.to_csv(RES / "_final_v10_folds.csv", index=False, encoding="utf-8-sig")
 print("\n저장: _final_v10_folds.csv")
 for mc in ["US", "UK"]:
     t = df[df.market == mc]

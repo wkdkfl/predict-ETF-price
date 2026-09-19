@@ -39,6 +39,7 @@ warnings.filterwarnings("ignore")
 BASE = Path(__file__).resolve().parent
 sys.path.insert(0, str(BASE))
 import lightgbm as lgb  # noqa: E402
+from _news_variant import make_pca, RES  # noqa: E402
 
 from _regime_fixes_v7 import prep  # noqa: E402
 from _run_enhanced_models_v4 import (  # noqa: E402
@@ -80,7 +81,7 @@ def prep_alt(mc, price_csv, price_col):
     df = add_targets_and_ar(df0)
     tg = make_targets(df0)
     i0 = int(len(df) * TRAIN_FRAC)
-    pca = PCA(n_components=PCA_DIM, random_state=SEED).fit(emb[:i0])
+    pca = make_pca(PCA_DIM, SEED).fit(emb[:i0])
     feat, fin, news, ar = build_features(df, pca.transform(emb).astype(np.float32))
     for c in tg.columns:
         feat[c] = tg[c].values
@@ -202,7 +203,7 @@ if __name__ == "__main__":
     for mc, lab in [("US", "미국 SPY"), ("UK", "영국 ISF")]:
         fs.append(walk_forward(*base[mc], mc, lab))
     fold = pd.concat(fs, ignore_index=True)
-    fold.to_csv(BASE / "_robustness_v13_folds.csv", index=False, encoding="utf-8-sig")
+    fold.to_csv(RES / "_robustness_v13_folds.csv", index=False, encoding="utf-8-sig")
 
     IDX = [("L_level", "수준  평균 log RV5"),
            ("S_shift", "분포 이동  |Δμ|/σ_train"),

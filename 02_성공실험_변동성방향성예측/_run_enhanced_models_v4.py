@@ -35,6 +35,7 @@ warnings.filterwarnings("ignore")
 BASE = Path(__file__).resolve().parent
 
 from _trading_days import filter_trading_days
+from _news_variant import DATA_SFX
 
 SEED = 42
 np.random.seed(SEED)
@@ -65,10 +66,10 @@ EXCLUDE_AS_FEATURE = {"Date", "Headline", "ETF"}
 
 def load_market(market_code: str):
     sub = "USD" if market_code == "US" else "UK"
-    df = pd.read_csv(BASE / sub / f"{market_code}_research_enhanced.csv")
+    df = pd.read_csv(BASE / sub / f"{market_code}_research_enhanced{DATA_SFX}.csv")
     df["Date"] = pd.to_datetime(df["Date"])
     df = df.sort_values("Date").reset_index(drop=True)
-    emb = np.load(BASE / sub / "news_embeddings_daily_aligned.npy")
+    emb = np.load(BASE / sub / f"news_embeddings_daily_aligned{DATA_SFX}.npy")
     # === v4: 비거래일(주말/공휴일 전방보간 행) 제거 ===
     df, emb = filter_trading_days(df, market_code, emb)
     return df, emb

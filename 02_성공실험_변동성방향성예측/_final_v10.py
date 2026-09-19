@@ -15,7 +15,7 @@
 """
 from __future__ import annotations
 
-import io, contextlib, math, sys, warnings
+import io, contextlib, math, os, sys, warnings
 from pathlib import Path
 
 import numpy as np
@@ -29,6 +29,7 @@ warnings.filterwarnings("ignore")
 BASE = Path(__file__).resolve().parent
 sys.path.insert(0, str(BASE))
 import lightgbm as lgb  # noqa: E402
+from _news_variant import RES  # noqa: E402
 
 SEED = 42
 N_BOOT = 5000
@@ -37,6 +38,13 @@ KW = dict(n_estimators=600, max_depth=5, learning_rate=0.04, subsample=0.8,
           colsample_bytree=0.6, reg_lambda=5.0, random_state=SEED,
           n_jobs=4, verbose=-1, deterministic=True, force_row_wise=True)
 GROUPS = ["AR_Only", "Financial_Only", "News_Pure", "AR+News", "Full"]
+DM_PAIRS = [("AR_Only", "AR+News"), ("AR_Only", "Full"),
+            ("Financial_Only", "Full"), ("News_Pure", "Full")]
+# Financial_Only 에는 뉴스 파생 열(sent_x_vix, sent_x_vol)이 섞여 있다(NEWS_SENT_COLS 에 미등록).
+# 기존 그룹·값은 그대로 두고, 이를 제외한 Financial_Clean 을 추가 행으로만 계산한다.
+if os.environ.get("EXTRA_CLEAN_FIN") == "1":
+    GROUPS = GROUPS + ["Financial_Clean"]
+    DM_PAIRS = DM_PAIRS + [("Financial_Clean", "Full")]
 
 
 def build(mc):
@@ -87,6 +95,8 @@ def main():
     fin_c = [c for c in common if c not in emb_c + sent_c + ar_c]
     G = {"AR_Only": ar_c, "Financial_Only": fin_c, "News_Pure": sent_c + emb_c,
          "AR+News": ar_c + sent_c + emb_c, "Full": common}
+    if "Financial_Clean" in GROUPS:
+        G["Financial_Clean"] = [c for c in fin_c if not c.startswith("sent_")]
 
     CUT_TEST = min(s["Date"].iloc[int(len(s) * 0.85)] for s in frames.values())
     CUT_TRAIN = min(s["Date"].iloc[int(len(s) * 0.70)] for s in frames.values())
@@ -140,8 +150,7 @@ def main():
     print("  Diebold-Mariano 검정 (기준 vs AR+News / Full) — 뉴스 증분 기여")
     dm_rows = []
     for m in ["US", "UK"]:
-        for base, cmp_ in [("AR_Only", "AR+News"), ("AR_Only", "Full"),
-                           ("Financial_Only", "Full"), ("News_Pure", "Full")]:
+        for base, cmp_ in DM_PAIRS:
             y, p1 = preds[(m, base)]
             _, p2 = preds[(m, cmp_)]
             s, pv = dm_test(y, p1, p2)
@@ -151,8 +160,8 @@ def main():
                      ("%s 우위" % cmp_) if (pv < 0.05 and s > 0)
                      else ("%s 우위" % base) if pv < 0.05 else "유의차 없음"))
 
-    res.to_csv(BASE / "_final_v10_volatility.csv", index=False, encoding="utf-8-sig")
-    pd.DataFrame(dm_rows).to_csv(BASE / "_final_v10_dm.csv", index=False, encoding="utf-8-sig")
+    res.to_csv(RES / "_final_v10_volatility.csv", index=False, encoding="utf-8-sig")
+    pd.DataFrame(dm_rows).to_csv(RES / "_final_v10_dm.csv", index=False, encoding="utf-8-sig")
     print("\n저장: _final_v10_volatility.csv, _final_v10_dm.csv")
 
 

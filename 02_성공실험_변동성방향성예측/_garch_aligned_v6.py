@@ -26,6 +26,7 @@ from _run_enhanced_models_v4 import (  # noqa: E402
     TRAIN_FRAC, VAL_FRAC, SEED, NEWS_SENT_COLS,
 )
 from _explore_targets_v5 import make_targets  # noqa: E402
+from _news_variant import make_pca, RES  # noqa: E402
 
 PCA_DIM = 15
 MAX_MISSING = 0.05
@@ -45,7 +46,7 @@ def aligned(mc: str):
     df = add_targets_and_ar(df0)
     tg = make_targets(df0)
     i0 = int(len(df) * TRAIN_FRAC)
-    pca = PCA(n_components=PCA_DIM, random_state=SEED).fit(emb[:i0])
+    pca = make_pca(PCA_DIM, SEED).fit(emb[:i0])
     feat, fin_cols, news_cols, ar_cols = build_features(df, pca.transform(emb).astype(np.float32))
     for c in tg.columns:
         feat[c] = tg[c].values
@@ -128,7 +129,7 @@ for mc in ["US", "UK"]:
 
 out = pd.DataFrame(rows)
 for mc, sub in [("US", "USD"), ("UK", "UK")]:
-    d = BASE / sub / "results_v6"
-    d.mkdir(exist_ok=True)
+    d = RES / sub / "results_v6"
+    d.mkdir(parents=True, exist_ok=True)
     out[out.market == mc].to_csv(d / "traditional_baselines.csv", index=False)
 print("\n저장 완료")

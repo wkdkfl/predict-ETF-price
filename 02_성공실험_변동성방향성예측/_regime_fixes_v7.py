@@ -38,6 +38,7 @@ from _run_enhanced_models_v4 import (  # noqa: E402
 )
 from _explore_targets_v5 import make_targets  # noqa: E402
 import lightgbm as lgb  # noqa: E402
+from _news_variant import make_pca  # noqa: E402
 
 PCA_DIM, MAX_MISS, EPS, H = 15, 0.05, 1e-8, 5
 KW = dict(n_estimators=500, max_depth=5, learning_rate=0.04, subsample=0.8,
@@ -49,7 +50,7 @@ def prep(mc):
     df = add_targets_and_ar(df0)
     tg = make_targets(df0)
     i0 = int(len(df) * TRAIN_FRAC)
-    pca = PCA(n_components=PCA_DIM, random_state=SEED).fit(emb[:i0])
+    pca = make_pca(PCA_DIM, SEED).fit(emb[:i0])
     feat, fin, news, ar = build_features(df, pca.transform(emb).astype(np.float32))
     for c in tg.columns:
         feat[c] = tg[c].values
