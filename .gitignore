@@ -51,3 +51,10 @@ finbert/flax_model.msgpack
 
 # NLTK data cache
 nltk_data/corpora/
+
+# Claude Code
+.claude/
+*.safetensors
+
+# 뉴스 수집·FinBERT 재개용 캐시 (진행 기록, 로그, 헤드라인별 임베딩)
+공통데이터/_news_cache/
