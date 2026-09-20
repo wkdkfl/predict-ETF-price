@@ -1,0 +1,51 @@
+학습 < 2022-05-19 | 검증 < 2024-03-07 | 시험 >= 2024-03-07
+피처 수: F0=25, F1=56, F2=34, F3=40, F4=50, F5=31
+
+[vol] 워크포워드 블록 5개: 2019-02-11~2020-02-17, 2020-02-17~2021-02-22, 2021-02-22~2022-02-24, 2022-02-24~2023-03-01, 2023-03-01~2024-03-07
+  F0 lgbm   score=0.25560
+  F0 linear score=0.35563
+  F1 lgbm   score=0.24824
+  F1 linear score=0.34170
+  F2 lgbm   score=0.25156
+  F2 linear score=0.36190
+  F3 lgbm   score=0.25342
+  F3 linear score=0.33794
+  F4 lgbm   score=0.25252
+  F4 linear score=0.34105
+  F5 lgbm   score=0.25333
+  F5 linear score=0.33231
+
+[dir] 워크포워드 블록 5개: 2019-02-11~2020-02-17, 2020-02-17~2021-02-22, 2021-02-22~2022-02-24, 2022-02-24~2023-03-01, 2023-03-01~2024-03-07
+  F0 lgbm   score=0.50417
+  F0 linear score=0.52168
+  F1 lgbm   score=0.49286
+  F1 linear score=0.51188
+  F2 lgbm   score=0.50337
+  F2 linear score=0.52217
+  F3 lgbm   score=0.48946
+  F3 linear score=0.51217
+  F4 lgbm   score=0.49393
+  F4 linear score=0.51643
+  F5 lgbm   score=0.49838
+  F5 linear score=0.51085
+
+선택 결과:
+ task featset  model    score    vs_F0    vs_F1
+ vol      F5 linear 0.332307 0.065595 0.027477
+ dir      F2 linear 0.522174 0.000495 0.010289
+
+시험 구간 평가 (모든 후보, 1회)
+  [vol] F0 시험 평가 완료
+  [vol] F1 시험 평가 완료
+  [vol] F2 시험 평가 완료
+  [vol] F3 시험 평가 완료
+  [vol] F4 시험 평가 완료
+  [vol] F5 시험 평가 완료
+  [dir] F0 시험 평가 완료
+  [dir] F1 시험 평가 완료
+  [dir] F2 시험 평가 완료
+  [dir] F3 시험 평가 완료
+  [dir] F4 시험 평가 완료
+  [dir] F5 시험 평가 완료
+기준선 F0·F1(lgbm) 이 재실험_결과/newsv2_full 의 v10 값과 정확히 일치
+저장 완료
