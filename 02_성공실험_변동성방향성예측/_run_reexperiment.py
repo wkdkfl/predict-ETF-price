@@ -50,6 +50,7 @@ STEPS = [
 ]
 
 
+# 실행 환경 패키지 버전 기록
 def pkg_versions():
     out = {}
     for m in ("numpy", "pandas", "scipy", "sklearn", "lightgbm", "arch", "torch", "transformers"):
@@ -60,6 +61,7 @@ def pkg_versions():
     return out
 
 
+# variant 하나에 대해 파이프라인 전 단계 실행
 def run_variant(name: str, steps: list[str]):
     cfg = VARIANTS[name]
     res = OUT_ROOT / name
@@ -80,6 +82,7 @@ def run_variant(name: str, steps: list[str]):
     return all(s["returncode"] == 0 for s in manifest["steps"])
 
 
+# 명령행 옵션에 따라 variant 실행
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--only", nargs="+", choices=list(VARIANTS))

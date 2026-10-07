@@ -30,12 +30,14 @@ plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 12.5, "axes.grid
                      "grid.alpha": 0.35, "axes.axisbelow": True, "figure.facecolor": "white"})
 
 
+# 최종 피처 프레임 생성
 def build(mc):
     from _regime_fixes_v7 import prep
     with contextlib.redirect_stdout(io.StringIO()):
         return prep(mc)
 
 
+# 실제 기사가 있는 날짜 집합
 def real_news_dates(sub):
     h = pd.read_csv(BASE / sub / f"news_per_headline{DATA_SFX}.csv", usecols=["date"])
     return set(pd.to_datetime(h["date"], errors="coerce").dropna().dt.normalize())
@@ -50,6 +52,7 @@ CUT_TEST = min(s["Date"].iloc[int(len(s) * 0.85)] for s in frames.values())
 CUT_TRAIN = min(s["Date"].iloc[int(len(s) * 0.70)] for s in frames.values())
 
 Z, Y, MK = {}, {}, {}
+# 시장별 시험 구간 예측 확률 준비
 for m, s in frames.items():
     tr = (s["Date"] < CUT_TRAIN).values
     sc = StandardScaler().fit(s[common].values[tr])

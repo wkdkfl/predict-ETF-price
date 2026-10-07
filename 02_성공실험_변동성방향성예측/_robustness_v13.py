@@ -56,6 +56,7 @@ KW = dict(n_estimators=600, max_depth=5, learning_rate=0.04, subsample=0.8,
           n_jobs=4, verbose=-1, deterministic=True, force_row_wise=True)
 
 
+# 블록 부트스트랩 신뢰구간
 def boot_ci(y, p):
     rng = np.random.RandomState(SEED)
     n = len(y); nb = max(1, n // BLOCK); out = []
@@ -67,6 +68,7 @@ def boot_ci(y, p):
     return float(np.percentile(out, 2.5)), float(np.percentile(out, 97.5))
 
 
+# 예측 표적 자산만 FTSE 250 등으로 교체
 def prep_alt(mc, price_csv, price_col):
     """v10 파이프라인에서 예측 표적 자산만 교체한다 (피처는 동일)."""
     df0, emb = load_market(mc)
@@ -98,6 +100,7 @@ def prep_alt(mc, price_csv, price_col):
     return s, keep, ar_c, cover
 
 
+# 확정 프로토콜로 대체 표적 평가
 def final_eval(frames):
     """v10 확정 프로토콜: pooled 학습 + 검증구간 MZ 보정 + 블록 부트스트랩."""
     CUT_TEST = min(frames[m][0]["Date"].iloc[int(len(frames[m][0]) * 0.85)] for m in frames)
@@ -135,6 +138,7 @@ def final_eval(frames):
     return out
 
 
+# 8-fold 워크포워드와 국면 지표 기록(표 18)
 def walk_forward(s, keep, ar_c, mc, label):
     """8-fold 확장 윈도우. fold별 성능과 세 가지 국면 지표를 함께 기록한다."""
     y, past = s["vol5"].values, s["rv5_past"].values

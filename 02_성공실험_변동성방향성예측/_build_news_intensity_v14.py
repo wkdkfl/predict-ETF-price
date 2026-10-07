@@ -43,6 +43,7 @@ TOPICS = {
 WINDOW, MIN_PERIODS = 60, 20
 
 
+# 비거래일 기사를 다음 거래일로 매핑
 def session_dates(cal: pd.Series, is_trading: np.ndarray, dates: pd.Series) -> pd.Series:
     """각 날짜를 (그 날 이후 첫 거래일)로 매핑."""
     trading = np.sort(cal[is_trading].values)
@@ -53,12 +54,14 @@ def session_dates(cal: pd.Series, is_trading: np.ndarray, dates: pd.Series) -> p
     return pd.Series(out, index=dates.index)
 
 
+# 과거 이동평균 대비 상대 강도 계산(당일 제외)
 def rel(x: pd.Series) -> pd.Series:
     past = x.shift(1).rolling(WINDOW, min_periods=MIN_PERIODS).mean()
     r = (x + 1.0) / (past + 1.0)
     return r.fillna(1.0)
 
 
+# 시장별 뉴스 강도·주제 피처(INT) 생성 및 저장
 def build(mc: str):
     sub, pref = MARKETS[mc]
     assert len(cen.HIGH_KW) == 15

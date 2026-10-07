@@ -51,6 +51,7 @@ KW = dict(n_estimators=600, max_depth=5, learning_rate=0.04, subsample=0.8,
 OHLC = {"US": "qqq", "UK": "isf"}   # 각 시장 파일에 존재하는 OHLCV 접두어
 
 
+# 개선 처리(결측 보간 등) 적용 여부에 따른 피처 프레임 생성
 def prep(mc, improve: bool):
     df0, emb = load_market(mc)
 
@@ -116,6 +117,7 @@ def prep(mc, improve: bool):
     return s, keep, ar_c
 
 
+# R² 블록 부트스트랩 신뢰구간
 def block_boot(y, p, n_boot=N_BOOT, block=BLOCK):
     rng = np.random.RandomState(SEED)
     n = len(y); nb = max(1, n // block); out = []
@@ -127,6 +129,7 @@ def block_boot(y, p, n_boot=N_BOOT, block=BLOCK):
     return float(np.percentile(out, 2.5)), float(np.percentile(out, 97.5))
 
 
+# 개선 전후 성능 비교
 def run(improve: bool, tag: str):
     frames, F = {}, {}
     for mc in ["US", "UK"]:

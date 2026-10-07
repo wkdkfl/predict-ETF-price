@@ -45,6 +45,7 @@ KW = dict(n_estimators=500, max_depth=5, learning_rate=0.04, subsample=0.8,
           colsample_bytree=0.6, reg_lambda=5.0, random_state=SEED, n_jobs=-1, verbose=-1)
 
 
+# 타깃·피처를 결합한 최종 프레임 생성(다른 스크립트가 공통 사용)
 def prep(mc):
     df0, emb = load_market(mc)
     df = add_targets_and_ar(df0)
@@ -69,6 +70,7 @@ def prep(mc):
     return s, keep, ar_c
 
 
+# LightGBM 회귀 학습 후 예측
 def fit_pred(Xtr, ytr, Xte):
     return lgb.LGBMRegressor(**KW).fit(Xtr, ytr).predict(Xte)
 

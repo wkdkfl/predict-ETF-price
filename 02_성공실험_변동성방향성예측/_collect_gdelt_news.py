@@ -71,6 +71,7 @@ MAX_TRIES = 8
 BASE_WAIT = 20
 
 
+# GDELT API 호출(재시도 포함)
 def call(params: dict):
     url = API + urllib.parse.urlencode(params)
     for i in range(MAX_TRIES):
@@ -85,6 +86,7 @@ def call(params: dict):
     return None
 
 
+# 기간을 나눠 timeline 모드로 일별 기사 수 수집
 def timeline_series(query: str, mode: str, start: date, end: date, chunk_days=365):
     """기간을 잘라 timeline 모드로 호출. 한 청크당 요청 1건."""
     rows = []
@@ -111,6 +113,7 @@ def timeline_series(query: str, mode: str, start: date, end: date, chunk_days=36
     return df.dropna(subset=["date"]).drop_duplicates("date")
 
 
+# 시장별 timeline 수집 결과 병합 및 저장
 def run_timeline():
     for sub, cfg in MARKETS.items():
         print("=" * 66)
@@ -133,6 +136,7 @@ def run_timeline():
         print("    저장: %s  (%d일, %d열)" % (out, len(merged), merged.shape[1] - 1))
 
 
+# 시장별 일별 헤드라인 목록 수집
 def run_artlist():
     for sub, cfg in MARKETS.items():
         print("=" * 66)
@@ -159,6 +163,7 @@ def run_artlist():
             print("    저장: %s (%d건)" % (out, len(rows)))
 
 
+# API 동작만 확인하는 소량 요청
 def run_smoke_test():
     """Issue two small requests only; do not write data files or start a collection."""
     start = date(2024, 1, 2)

@@ -41,18 +41,21 @@ DM_PAIRS = [("AR_Only", "AR+News"), ("AR_Only", "Full"),
             ("Financial_Clean", "Full")]
 
 
+# 최종 피처 프레임 생성
 def build(mc):
     from _regime_fixes_v7 import prep
     with contextlib.redirect_stdout(io.StringIO()):
         return prep(mc)
 
 
+# 블록 부트스트랩 표본 인덱스
 def _boot_idx(n, rng):
     nb = max(1, n // BLOCK)
     st = rng.randint(0, max(1, n - BLOCK + 1), nb)
     return np.concatenate([np.arange(s, min(s + BLOCK, n)) for s in st])[:n]
 
 
+# AUC 블록 부트스트랩 신뢰구간
 def block_boot_auc(y, p):
     rng = np.random.RandomState(SEED)
     out = []
@@ -65,6 +68,7 @@ def block_boot_auc(y, p):
     return float(np.percentile(out, 2.5)), float(np.percentile(out, 97.5))
 
 
+# 두 모형 AUC 차의 쌍체 신뢰구간
 def block_boot_dauc(y, p_new, p_old):
     """같은 부트스트랩 표본에서 두 모형의 AUC 차 -> 쌍체 CI."""
     rng = np.random.RandomState(SEED)
@@ -78,6 +82,7 @@ def block_boot_dauc(y, p_new, p_old):
     return float(out.mean()), float(np.percentile(out, 2.5)), float(np.percentile(out, 97.5))
 
 
+# Brier 손실 기반 DM 검정
 def dm_cls(y, p1, p2, h=None):
     h = HORIZON if h is None else h
     d = (y - p1) ** 2 - (y - p2) ** 2
@@ -93,6 +98,7 @@ def dm_cls(y, p1, p2, h=None):
     return float(s), float(2 * (1 - t_dist.cdf(abs(s), df=n - 1)))
 
 
+# LightGBM 과 L2 로지스틱의 방향성 성능 비교
 def main():
     US, keep_us, ar_us = build("US")
     UK, keep_uk, ar_uk = build("UK")

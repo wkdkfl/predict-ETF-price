@@ -41,6 +41,7 @@ CORE6 = CORE3 + ["rolling_std_5", "rolling_std_20", "log_absret_lag1"]
 CORE10 = CORE6 + ["absret_lag2", "absret_lag3", "rolling_absret_20", "absret_surprise"]
 
 
+# 블록 부트스트랩 신뢰구간
 def boot_ci(y, p):
     rng = np.random.RandomState(SEED)
     n = len(y); nb = max(1, n // BLOCK); out = []
@@ -52,6 +53,7 @@ def boot_ci(y, p):
     return float(np.percentile(out, 2.5)), float(np.percentile(out, 97.5))
 
 
+# 절약 모형과 FTSE 250 대체 표적 평가
 def evaluate(frames, cols, label):
     CUT_TEST = min(frames[m][0]["Date"].iloc[int(len(frames[m][0]) * 0.85)] for m in frames)
     CUT_TRAIN = min(frames[m][0]["Date"].iloc[int(len(frames[m][0]) * 0.70)] for m in frames)

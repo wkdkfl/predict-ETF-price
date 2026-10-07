@@ -31,6 +31,7 @@ RES = Path(os.environ.get("RESULT_DIR", str(BASE)))
 RES.mkdir(parents=True, exist_ok=True)
 
 
+# 설정된 SVD 솔버로 PCA 객체 생성
 def make_pca(n_components: int, random_state: int):
     from sklearn.decomposition import PCA
     return PCA(n_components=n_components, random_state=random_state, svd_solver=PCA_SOLVER)

@@ -61,6 +61,7 @@ NEWS_COLS = AGG_COLS + ["news_available"]
 SFX = "_newsv2"
 
 
+# 새 환경의 FinBERT 출력이 기존 저장값과 같은지 점검
 def validate_against_old(n: int = 300) -> bool:
     """기존에 저장된 헤드라인별 확률과 새 환경의 FinBERT 출력이 일치하는지 점검 (모델·토크나이저 동일성)."""
     old = pd.read_csv(BASE / "USD" / "news_per_headline.csv")
@@ -73,6 +74,7 @@ def validate_against_old(n: int = 300) -> bool:
     return ok
 
 
+# 비거래일 기사를 다음 거래일로 매핑
 def session_dates(cal: pd.Series, is_trading: np.ndarray, dates: pd.Series) -> pd.Series:
     """각 날짜를 (그 날 이후 첫 거래일)로 매핑. 프레임 마지막 거래일 이후 날짜는 NaT."""
     trading = np.sort(cal[is_trading].values)
@@ -83,6 +85,7 @@ def session_dates(cal: pd.Series, is_trading: np.ndarray, dates: pd.Series) -> p
     return pd.Series(out, index=dates.index)
 
 
+# 신규 뉴스로 FinBERT 피처를 만들고 research_enhanced 의 뉴스 열을 교체
 def build_market(mc: str, reuse_cache: bool):
     cfg = MARKETS[mc]
     sub = cfg["sub"]
@@ -180,6 +183,7 @@ def build_market(mc: str, reuse_cache: bool):
           f"news_sentiment_daily{SFX}.csv, news_per_headline{SFX}.csv")
 
 
+# 명령행 옵션 처리 후 시장별 실행
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--validate", action="store_true", help="FinBERT 재현성 점검만")

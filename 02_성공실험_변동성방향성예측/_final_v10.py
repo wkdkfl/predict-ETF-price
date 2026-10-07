@@ -47,12 +47,14 @@ if os.environ.get("EXTRA_CLEAN_FIN") == "1":
     DM_PAIRS = DM_PAIRS + [("Financial_Clean", "Full")]
 
 
+# 최종 피처 프레임 생성
 def build(mc):
     from _regime_fixes_v7 import prep
     with contextlib.redirect_stdout(io.StringIO()):
         return prep(mc)
 
 
+# R² 블록 부트스트랩 신뢰구간
 def block_boot(y, p, fn, n_boot=N_BOOT, block=BLOCK):
     rng = np.random.RandomState(SEED)
     n = len(y); nb = max(1, n // block); out = []
@@ -67,6 +69,7 @@ def block_boot(y, p, fn, n_boot=N_BOOT, block=BLOCK):
     return float(np.percentile(out, 2.5)), float(np.percentile(out, 97.5))
 
 
+# DM 검정(Newey-West HAC + HLN 수정)
 def dm_test(y, p1, p2, h=5):
     """p1 기준 vs p2. 양수면 p2 우위. Newey-West HAC + HLN 수정."""
     d = (y - p1) ** 2 - (y - p2) ** 2
@@ -82,6 +85,7 @@ def dm_test(y, p1, p2, h=5):
     return float(stat), float(2 * (1 - t_dist.cdf(abs(stat), df=n - 1)))
 
 
+# 5일 실현변동성 피처군별 R²·신뢰구간·DM 검정 산출(표 12·13)
 def main():
     US, keep_us, ar_us = build("US")
     UK, keep_uk, ar_uk = build("UK")

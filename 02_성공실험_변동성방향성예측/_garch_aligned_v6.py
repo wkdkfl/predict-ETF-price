@@ -40,6 +40,7 @@ except Exception:
     HAVE_ARCH = False
 
 
+# 본 실험과 같은 표본 행과 원계열 수익률 재현
 def aligned(mc: str):
     """v6 과 동일한 행 집합을 재현하고 원계열 수익률을 함께 반환."""
     df0, emb = load_market(mc)
@@ -62,6 +63,7 @@ def aligned(mc: str):
 
 
 rows = []
+# 시장별 HAR-RV·GARCH·GJR-GARCH 적합과 평가
 for mc in ["US", "UK"]:
     print("=" * 68)
     print("  %s" % mc)

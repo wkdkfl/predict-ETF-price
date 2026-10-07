@@ -16,6 +16,7 @@ DESC = {"F0": "AR_Only (기준선)", "F1": "AR + 기존 뉴스(감성16+임베�
         "F3": "AR + INT + 평활 감성(SS 6)", "F4": "AR + INT + 감성16", "F5": "AR + 평활 감성(SS 6)"}
 
 
+# DataFrame 을 마크다운 표로 변환
 def md(df):
     cols = list(df.columns)
     out = ["| " + " | ".join(map(str, cols)) + " |", "|" + "|".join("---" for _ in cols) + "|"]
@@ -24,6 +25,7 @@ def md(df):
     return "\n".join(out)
 
 
+# 개선실험 결과 CSV 로 SUMMARY.md 생성
 def main():
     sel = pd.read_csv(D / "selection_walkforward.csv")
     tv, td = pd.read_csv(D / "test_volatility.csv"), pd.read_csv(D / "test_direction.csv")

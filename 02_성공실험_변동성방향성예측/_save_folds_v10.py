@@ -20,6 +20,7 @@ KW = dict(n_estimators=600, max_depth=5, learning_rate=0.04, subsample=0.8,
 N_FOLDS = 8
 
 
+# 최종 피처 프레임 생성
 def build(mc):
     from _regime_fixes_v7 import prep
     with contextlib.redirect_stdout(io.StringIO()):
@@ -27,6 +28,7 @@ def build(mc):
 
 
 rows = []
+# 시장별 8-fold 워크포워드 R² 계산
 for mc in ["US", "UK"]:
     s, keep, ar_c = build(mc)
     y, past = s["vol5"].values, s["rv5_past"].values

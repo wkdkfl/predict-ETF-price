@@ -89,6 +89,7 @@ UK_SYMBOLS = {
 }
 
 
+# yfinance 로 한 종목 시세 다운로드(재시도 포함)
 def fetch(symbol: str, retries: int = 3, sleep_s: float = 1.5) -> pd.DataFrame:
     """Fetch one symbol from yfinance with retries."""
     last_err = None
@@ -112,6 +113,7 @@ def fetch(symbol: str, retries: int = 3, sleep_s: float = 1.5) -> pd.DataFrame:
     raise RuntimeError(f"failed to fetch {symbol}: {last_err}")
 
 
+# 시장별 보조 피처를 날짜 기준 표로 결합
 def build_market(symbols: dict, label: str) -> pd.DataFrame:
     """Download all symbols, build wide dataframe indexed by Date."""
     frames = []
@@ -149,6 +151,7 @@ def build_market(symbols: dict, label: str) -> pd.DataFrame:
     return out
 
 
+# 미국·영국 보조 피처 다운로드 및 저장
 def main():
     print(f"Date range: {START} to {END}")
     print(f"Output dir: {BASE_DIR}\n")

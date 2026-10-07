@@ -33,18 +33,21 @@ plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 12.5, "axes.grid
                      "grid.alpha": 0.35, "axes.axisbelow": True, "figure.facecolor": "white"})
 
 
+# 최종 피처 프레임 생성
 def build(mc):
     from _regime_fixes_v7 import prep
     with contextlib.redirect_stdout(io.StringIO()):
         return prep(mc)
 
 
+# 실제 기사가 있는 날짜 집합
 def news_dates(sub, sfx):
     """해당 자료에서 실제로 기사가 존재하는 날짜 집합."""
     h = pd.read_csv(BASE / sub / ("news_per_headline%s.csv" % sfx), usecols=["date"])
     return set(pd.to_datetime(h["date"], errors="coerce").dropna().dt.normalize())
 
 
+# 그림 10(변동성·감성 추이와 뉴스 커버리지) 작성
 def main():
     os.environ.setdefault("NEWS_DATA", "old")   # 상단 곡선은 본 실험(기존) 자료 기준
     os.environ.setdefault("PCA_SOLVER", "full")

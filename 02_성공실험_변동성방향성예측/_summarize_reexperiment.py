@@ -16,10 +16,12 @@ V4 = ["oldnews_full", "newsv2_full", "oldnews_auto", "newsv2_auto"]
 GROUPS = ["AR_Only", "Financial_Only", "Financial_Clean", "News_Pure", "AR+News", "Full"]
 
 
+# variant 결과 CSV 읽기
 def rd(v, f):
     return pd.read_csv(RES / v / f)
 
 
+# DataFrame 을 마크다운 표로 변환
 def md(df: pd.DataFrame) -> str:
     cols = list(df.columns)
     out = ["| " + " | ".join(str(c) for c in cols) + " |", "|" + "|".join("---" for _ in cols) + "|"]
@@ -28,10 +30,12 @@ def md(df: pd.DataFrame) -> str:
     return "\n".join(out)
 
 
+# 점추정과 신뢰구간 문자열
 def fmt_ci(x, dec=3):
     return f"{x.iloc[0]:+.{dec}f} [{x.iloc[1]:+.{dec}f}, {x.iloc[2]:+.{dec}f}]"
 
 
+# 재실험 결과 비교표로 SUMMARY.md 생성
 def main():
     L = []
     man = {v: json.loads((RES / v / "run_manifest.json").read_text(encoding="utf-8")) for v in V4}

@@ -36,6 +36,7 @@ import pandas as pd
 BASE = Path(__file__).resolve().parent
 
 
+# 미국 거래일 판별(QQQ 거래량 변화일)
 def _us_mask(df: pd.DataFrame) -> pd.Series:
     ex = pd.read_csv(BASE / "USD" / "extra_features.csv", usecols=["Date", "qqq_volume"])
     ex["Date"] = pd.to_datetime(ex["Date"])
@@ -49,17 +50,20 @@ def _us_mask(df: pd.DataFrame) -> pd.Series:
     return df["Date"].isin(cal) | ((df["Date"] > cutoff) & weekday & changed)
 
 
+# 영국 거래일 판별(ISF.L 시세 존재일)
 def _uk_mask(df: pd.DataFrame) -> pd.Series:
     p = pd.read_csv(BASE / "UK" / "UK_ISF_price.csv", usecols=["Date"])
     p["Date"] = pd.to_datetime(p["Date"])
     return df["Date"].isin(set(p["Date"]))
 
 
+# 시장별 거래일 여부
 def trading_day_mask(df: pd.DataFrame, market_code: str) -> pd.Series:
     """df 의 각 행이 실제 거래일인지 여부를 boolean Series 로 반환."""
     return _us_mask(df) if market_code == "US" else _uk_mask(df)
 
 
+# 거래일 행만 남기기
 def filter_trading_days(df: pd.DataFrame, market_code: str, emb: np.ndarray = None,
                         verbose: bool = True):
     """거래일 행만 남긴 (df, emb) 를 반환. emb 는 df 와 행 정렬되어 있어야 한다."""

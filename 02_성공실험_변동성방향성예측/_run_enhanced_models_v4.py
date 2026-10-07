@@ -64,6 +64,7 @@ EXCLUDE_AS_FEATURE = {"Date", "Headline", "ETF"}
 # Data prep
 # ---------------------------------------------------------------------------
 
+# 시장별 원자료·임베딩 적재와 거래일 필터 적용
 def load_market(market_code: str):
     sub = "USD" if market_code == "US" else "UK"
     df = pd.read_csv(BASE / sub / f"{market_code}_research_enhanced{DATA_SFX}.csv")
@@ -75,6 +76,7 @@ def load_market(market_code: str):
     return df, emb
 
 
+# 수익률 타깃과 자기회귀 피처 생성
 def add_targets_and_ar(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     p = df["ETF"].astype(float)
@@ -132,6 +134,7 @@ def add_targets_and_ar(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+# 같은 부호 수익률의 연속 일수
 def _sign_run_length(ret: pd.Series) -> pd.Series:
     """Count consecutive same-sign returns ending at each day."""
     signs = np.sign(ret.values)
@@ -142,6 +145,7 @@ def _sign_run_length(ret: pd.Series) -> pd.Series:
     return pd.Series(runs, index=ret.index)
 
 
+# RSI 계산
 def _rsi(ret: pd.Series, period: int = 14) -> pd.Series:
     """Relative Strength Index from log returns."""
     gain = ret.clip(lower=0).rolling(period, min_periods=1).mean()
@@ -150,6 +154,7 @@ def _rsi(ret: pd.Series, period: int = 14) -> pd.Series:
     return 100.0 - (100.0 / (1.0 + rs))
 
 
+# 금융·뉴스·임베딩 피처 결합
 def build_features(df: pd.DataFrame, emb_pca: np.ndarray):
     # v3 new AR/technical columns
     new_ar_cols = [
@@ -208,6 +213,7 @@ def build_features(df: pd.DataFrame, emb_pca: np.ndarray):
     return feat, fin_cols, news_cols, ar_cols
 
 
+# 시간 순서 기반 학습/검증/시험 분할
 def time_split(feat: pd.DataFrame):
     n = len(feat)
     i_tr = int(n * TRAIN_FRAC)
@@ -219,6 +225,7 @@ def time_split(feat: pd.DataFrame):
 # Regression models: realized volatility
 # ---------------------------------------------------------------------------
 
+# 회귀 지표(R²·RMSE·MAE·상관)
 def metrics_reg(y, p):
     return {"r2": float(r2_score(y, p)),
             "rmse": float(math.sqrt(mean_squared_error(y, p))),
@@ -226,6 +233,7 @@ def metrics_reg(y, p):
             "corr": float(np.corrcoef(y, p)[0, 1]) if y.std() > 0 and p.std() > 0 else 0.0}
 
 
+# Optuna 로 XGBoost 회귀 튜닝
 def xgb_reg_optuna(X_tr, y_tr, X_va, y_va, X_te, y_te, n_trials):
     import optuna, xgboost as xgb
     optuna.logging.set_verbosity(optuna.logging.WARNING)
@@ -260,6 +268,7 @@ def xgb_reg_optuna(X_tr, y_tr, X_va, y_va, X_te, y_te, n_trials):
     return metrics_reg(y_te, pred), pred, m, study.best_params
 
 
+# Optuna 로 LightGBM 회귀 튜닝
 def lgbm_reg_optuna(X_tr, y_tr, X_va, y_va, X_te, y_te, n_trials):
     import optuna, lightgbm as lgb
     optuna.logging.set_verbosity(optuna.logging.WARNING)
@@ -295,12 +304,14 @@ def lgbm_reg_optuna(X_tr, y_tr, X_va, y_va, X_te, y_te, n_trials):
     return metrics_reg(y_te, pred), pred, m, study.best_params
 
 
+# Ridge 회귀
 def ridge_reg(X_tr, y_tr, X_te, y_te):
     m = Ridge(alpha=1.0, random_state=SEED).fit(X_tr, y_tr)
     p = m.predict(X_te)
     return metrics_reg(y_te, p), p
 
 
+# RF 회귀
 def rf_reg(X_tr, y_tr, X_te, y_te):
     m = RandomForestRegressor(n_estimators=500, max_depth=10,
                               min_samples_leaf=5, n_jobs=-1,
@@ -309,6 +320,7 @@ def rf_reg(X_tr, y_tr, X_te, y_te):
     return metrics_reg(y_te, p), p, m
 
 
+# Stacking 회귀 앙상블
 def stacking_reg(X_tr, y_tr, X_va, y_va, X_te, y_te, n_trials):
     """Stacking ensemble: XGB + LGBM + RF → Ridge meta-learner."""
     import xgboost as xgb; import lightgbm as lgb
@@ -352,6 +364,7 @@ def stacking_reg(X_tr, y_tr, X_va, y_va, X_te, y_te, n_trials):
 # Classification models: direction
 # ---------------------------------------------------------------------------
 
+# 분류 지표(정확도·AUC 등)
 def metrics_cls(y, p_prob, p_lab=None):
     if p_lab is None:
         p_lab = (p_prob >= 0.5).astype(int)
@@ -362,6 +375,7 @@ def metrics_cls(y, p_prob, p_lab=None):
             "logloss": float(log_loss(y, np.clip(p_prob, 1e-6, 1-1e-6)))}
 
 
+# Optuna 로 XGBoost 분류 튜닝
 def xgb_cls_optuna(X_tr, y_tr, X_va, y_va, X_te, y_te, n_trials):
     import optuna, xgboost as xgb
     optuna.logging.set_verbosity(optuna.logging.WARNING)
@@ -398,6 +412,7 @@ def xgb_cls_optuna(X_tr, y_tr, X_va, y_va, X_te, y_te, n_trials):
     return metrics_cls(y_te, prob), prob, m, study.best_params
 
 
+# Optuna 로 LightGBM 분류 튜닝
 def lgbm_cls_optuna(X_tr, y_tr, X_va, y_va, X_te, y_te, n_trials):
     import optuna, lightgbm as lgb
     optuna.logging.set_verbosity(optuna.logging.WARNING)
@@ -434,6 +449,7 @@ def lgbm_cls_optuna(X_tr, y_tr, X_va, y_va, X_te, y_te, n_trials):
     return metrics_cls(y_te, prob), prob, m, study.best_params
 
 
+# 로지스틱 회귀 분류
 def logit_cls(X_tr, y_tr, X_te, y_te):
     m = LogisticRegression(C=1.0, max_iter=2000, random_state=SEED,
                            solver="liblinear").fit(X_tr, y_tr)
@@ -441,6 +457,7 @@ def logit_cls(X_tr, y_tr, X_te, y_te):
     return metrics_cls(y_te, prob), prob
 
 
+# RF 분류
 def rf_cls(X_tr, y_tr, X_te, y_te):
     m = RandomForestClassifier(n_estimators=500, max_depth=10,
                                min_samples_leaf=5, n_jobs=-1,
@@ -450,6 +467,7 @@ def rf_cls(X_tr, y_tr, X_te, y_te):
     return metrics_cls(y_te, prob), prob, m
 
 
+# Stacking 분류 앙상블
 def stacking_cls(X_tr, y_tr, X_va, y_va, X_te, y_te, n_trials):
     """Stacking ensemble: XGB + LGBM + RF → Logistic meta-learner."""
     import xgboost as xgb; import lightgbm as lgb
@@ -495,6 +513,7 @@ def stacking_cls(X_tr, y_tr, X_va, y_va, X_te, y_te, n_trials):
 # Statistical tests
 # ---------------------------------------------------------------------------
 
+# 회귀 예측 DM 검정
 def diebold_mariano(y_true, p1, p2, h=1):
     e1 = (y_true - p1) ** 2
     e2 = (y_true - p2) ** 2
@@ -514,6 +533,7 @@ def diebold_mariano(y_true, p1, p2, h=1):
     return float(dm), float(p)
 
 
+# 분류 확률 DM 검정
 def dm_classification(y_true, prob1, prob2, h=1):
     e1 = (y_true - prob1) ** 2
     e2 = (y_true - prob2) ** 2
@@ -528,6 +548,7 @@ def dm_classification(y_true, prob1, prob2, h=1):
     return float(dm), float(p)
 
 
+# 지표의 블록 부트스트랩 신뢰구간
 def block_bootstrap_metric(y, p, metric_fn, n_boot=BOOTSTRAP_N,
                             block_size=10, alpha=0.05):
     """Block bootstrap for time-series data."""
@@ -557,6 +578,7 @@ def block_bootstrap_metric(y, p, metric_fn, n_boot=BOOTSTRAP_N,
 # Walk-forward validation
 # ---------------------------------------------------------------------------
 
+# 확장 윈도우 워크포워드 검증
 def walk_forward_validate(feat, all_feat_cols, target_col, task="reg",
                           n_folds=WF_N_FOLDS):
     """Expanding-window walk-forward validation."""
@@ -613,6 +635,7 @@ def walk_forward_validate(feat, all_feat_cols, target_col, task="reg",
 # Pipeline
 # ---------------------------------------------------------------------------
 
+# 시장별 전체 모형 학습·평가·저장
 def run_market(market_code: str) -> Dict:
     print(f"\n{'='*60}\n  {market_code} -- V4: TRADING-DAY FILTERED\n{'='*60}")
     sub = "USD" if market_code == "US" else "UK"

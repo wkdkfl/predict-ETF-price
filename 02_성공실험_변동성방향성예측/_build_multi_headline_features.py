@@ -56,6 +56,7 @@ CLOSE_PATTERNS = re.compile(
 )
 
 
+# 뉴스 CSV 적재 후 빈 헤드라인 제거와 날짜 파싱
 def load_news(path: Path) -> pd.DataFrame:
     df = pd.read_csv(path)
     df["headline"] = df["headline"].astype(str).str.strip()
@@ -66,6 +67,7 @@ def load_news(path: Path) -> pd.DataFrame:
     return df.reset_index(drop=True)
 
 
+# 장 마감 후 요약 기사(누출 위험) 제거
 def filter_close_headlines(df: pd.DataFrame) -> tuple[pd.DataFrame, int]:
     mask = df["headline"].str.contains(CLOSE_PATTERNS, na=False)
     removed = int(mask.sum())
@@ -73,6 +75,7 @@ def filter_close_headlines(df: pd.DataFrame) -> tuple[pd.DataFrame, int]:
 
 
 @torch.no_grad()
+# FinBERT 로 헤드라인별 감성 확률과 [CLS] 임베딩 추출
 def run_finbert(
     df: pd.DataFrame,
     finbert_dir: Path,
@@ -123,6 +126,7 @@ def run_finbert(
     return probs, embs
 
 
+# 헤드라인 감성을 일별 통계량 12종으로 집계
 def aggregate_daily(df: pd.DataFrame, probs: np.ndarray) -> pd.DataFrame:
     """12 daily sentiment features."""
     tmp = df.copy()
@@ -156,12 +160,14 @@ def aggregate_daily(df: pd.DataFrame, probs: np.ndarray) -> pd.DataFrame:
     return agg
 
 
+# TF-IDF 용으로 일별 헤드라인을 하나의 문자열로 연결
 def build_concat_daily(df: pd.DataFrame) -> pd.DataFrame:
     """Daily concatenated headlines for downstream TF-IDF."""
     grp = df.groupby("date")["headline"].apply(lambda s: " || ".join(s.tolist()))
     return grp.reset_index().rename(columns={"headline": "headlines_concat"})
 
 
+# 일별 평균 [CLS] 임베딩 계산
 def aggregate_embeddings(df: pd.DataFrame, embs: np.ndarray) -> tuple[np.ndarray, list[str]]:
     """Mean [CLS] embedding per day."""
     dates = df["date"].values
@@ -173,6 +179,7 @@ def aggregate_embeddings(df: pd.DataFrame, embs: np.ndarray) -> tuple[np.ndarray
     return out, uniq
 
 
+# 한 시장의 뉴스 전처리부터 감성·임베딩 저장까지 일괄 수행
 def process_market(news_path: Path, out_dir: Path, label: str):
     print(f"\n{'='*70}\n[{label}] processing {news_path.name}\n{'='*70}", flush=True)
     df = load_news(news_path)
@@ -217,6 +224,7 @@ def process_market(news_path: Path, out_dir: Path, label: str):
     print(f"  saved -> news_embeddings_dates.csv  {len(dates):,} dates")
 
 
+# 시드 고정 후 미국·영국 순서로 처리
 def main():
     torch.manual_seed(SEED); np.random.seed(SEED)
     print(f"device = {DEVICE}   batch = {BATCH_SIZE}   max_len = {MAX_LEN}")

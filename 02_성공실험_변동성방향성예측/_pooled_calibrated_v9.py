@@ -44,12 +44,14 @@ KW = dict(n_estimators=600, max_depth=5, learning_rate=0.04, subsample=0.8,
           n_jobs=4, verbose=-1, deterministic=True, force_row_wise=True)
 
 
+# 최종 피처 프레임 생성
 def build(mc):
     from _regime_fixes_v7 import prep
     with contextlib.redirect_stdout(io.StringIO()):
         return prep(mc)
 
 
+# 단독 학습과 합동 학습+보정의 성능 비교(표 17)
 def main():
     US, keep_us, ar_us = build("US")
     UK, keep_uk, ar_uk = build("UK")

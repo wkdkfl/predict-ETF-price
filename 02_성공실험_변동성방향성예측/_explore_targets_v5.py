@@ -42,6 +42,7 @@ PCA_DIMS = [50, 15, 5]
 EPS = 1e-8
 
 
+# 다일 실현변동성·누적 방향 타깃 생성
 def make_targets(df: pd.DataFrame) -> pd.DataFrame:
     """다일 실현변동성 및 누적수익률 방향 타깃 생성 (t 시점 정보로 t+1..t+h 예측)."""
     r = np.log(df["ETF"].astype(float)).diff()
@@ -57,6 +58,7 @@ def make_targets(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+# 타깃·시계별 예측 성능 비교
 def evaluate(market_code: str):
     df0, emb = load_market(market_code)
     df = add_targets_and_ar(df0)

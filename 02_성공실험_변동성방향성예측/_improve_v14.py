@@ -97,6 +97,7 @@ def model_fit(task, model, X, y):
                                 max_iter=3000).fit(X, y)
 
 
+# 시장별 합동 학습 후 구간별 예측
 def fit_predict(fs, task, model, m, cut_train, embargo, masks):
     """시장 m 에 대한 풀링 학습(v10 과 동일한 적층 순서) 후 masks 각각의 예측을 반환."""
     o = "UK" if m == "US" else "US"
@@ -131,6 +132,7 @@ def wf_blocks():
     return list(zip(edges[:-1], edges[1:]))
 
 
+# 사전 표본 워크포워드로 후보 선택
 def walk_forward(task):
     rows = []
     blocks = wf_blocks()
@@ -193,6 +195,7 @@ def paired_boot_dauc(y, p1, p2):
     return float(np.percentile(out, 2.5)), float(np.percentile(out, 97.5))
 
 
+# 시험 구간에서 모든 후보 1회 평가
 def test_eval(task):
     res, store = [], {}
     for fs in BASES + CANDS:
