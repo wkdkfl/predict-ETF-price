@@ -1,0 +1,29 @@
+[dir20] fold 1 US 후보 42  선택: Full                   logit_C0.001  내부 0.722 -> 외부 0.469
+[dir20] fold 1 UK 후보 42  선택: AR+FIN_clean           rf_d4         내부 0.689 -> 외부 0.676
+[dir20] fold 2 US 후보 42  선택: Full                   logit_C0.1    내부 0.510 -> 외부 0.386
+[dir20] fold 2 UK 후보 42  선택: Full                   lgbm_mid      내부 0.674 -> 외부 0.679
+[dir20] fold 3 US 후보 42  선택: FIN_clean              lgbm_mid      내부 0.642 -> 외부 0.593
+[dir20] fold 3 UK 후보 42  선택: Full                   rf_d4         내부 0.730 -> 외부 0.544
+[dir20] fold 4 US 후보 42  선택: FIN_clean              lgbm_mid      내부 0.586 -> 외부 0.512
+[dir20] fold 4 UK 후보 42  선택: AR+FIN_clean           lgbm_shallow  내부 0.620 -> 외부 0.749
+[dir20] fold 5 US 후보 42  선택: AR                     logit_C0.001  내부 0.609 -> 외부 0.629
+[dir20] fold 5 UK 후보 42  선택: Full                   lgbm_mid      내부 0.610 -> 외부 0.527
+[dir20] fold 6 US 후보 42  선택: AR+FIN_clean+FIN_ext   logit_C0.01   내부 0.589 -> 외부 0.701
+[dir20] fold 6 UK 후보 42  선택: AR+FIN_clean+FIN_ext   lgbm_shallow  내부 0.654 -> 외부 0.626
+[dir20] fold 7 US 후보 42  선택: FIN_clean              logit_C0.1    내부 0.570 -> 외부 0.616
+[dir20] fold 7 UK 후보 42  선택: AR+FIN_clean           lgbm_shallow  내부 0.607 -> 외부 0.547
+[dir20] fold 8 US 후보 28  선택: FIN_clean              logit_C0.001  내부 0.620 -> 외부 0.765
+[dir20] fold 8 UK 후보 28  선택: AR+FIN_clean           rf_d4         내부 0.580 -> 외부 0.393
+
+==============================================================================================================
+  [dir20] 중첩 워크포워드 OOS (42 후보, 엠바고·블록 40)
+  US  best_raw  n=1945 상승0.697  AUC 0.521 [0.434, 0.614]  Holm p=1.000  fold>0.5 6/8  fold평균 0.584
+  US  best_cal  n=1945 상승0.697  AUC 0.490 [0.391, 0.589]  Holm p=1.000  fold>0.5 6/8  fold평균 0.584
+  US  top3_raw  n=1945 상승0.697  AUC 0.512 [0.422, 0.608]  Holm p=1.000  fold>0.5 6/8  fold평균 0.576
+  US  top3_cal  n=1945 상승0.697  AUC 0.491 [0.398, 0.590]  Holm p=1.000  fold>0.5 6/8  fold평균 0.589
+  UK  best_raw  n=1868 상승0.579  AUC 0.515 [0.431, 0.595]  Holm p=1.000  fold>0.5 7/8  fold평균 0.593
+  UK  best_cal  n=1868 상승0.579  AUC 0.506 [0.420, 0.588]  Holm p=1.000  fold>0.5 7/8  fold평균 0.593
+  UK  top3_raw  n=1868 상승0.579  AUC 0.534 [0.450, 0.610]  Holm p=1.000  fold>0.5 7/8  fold평균 0.600
+  UK  top3_cal  n=1868 상승0.579  AUC 0.530 [0.442, 0.611]  Holm p=1.000  fold>0.5 7/8  fold평균 0.600
+
+저장: 방향성개선_v18

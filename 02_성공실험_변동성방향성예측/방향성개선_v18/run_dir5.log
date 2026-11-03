@@ -1,0 +1,29 @@
+[dir5] fold 1 US 후보 42  선택: AR+FIN_ext             lgbm_v10      내부 0.612 -> 외부 0.551
+[dir5] fold 1 UK 후보 42  선택: AR+FIN_clean           lgbm_mid      내부 0.618 -> 외부 0.578
+[dir5] fold 2 US 후보 42  선택: FIN_clean              rf_d4         내부 0.560 -> 외부 0.476
+[dir5] fold 2 UK 후보 42  선택: AR+FIN_ext             rf_d4         내부 0.576 -> 외부 0.553
+[dir5] fold 3 US 후보 42  선택: AR+FIN_clean           logit_C0.001  내부 0.568 -> 외부 0.494
+[dir5] fold 3 UK 후보 42  선택: AR+FIN_ext             logit_C0.001  내부 0.605 -> 외부 0.582
+[dir5] fold 4 US 후보 42  선택: FIN_clean              lgbm_v10      내부 0.555 -> 외부 0.550
+[dir5] fold 4 UK 후보 42  선택: AR+FIN_clean+FIN_ext   logit_C0.001  내부 0.597 -> 외부 0.561
+[dir5] fold 5 US 후보 42  선택: AR                     logit_C0.001  내부 0.546 -> 외부 0.525
+[dir5] fold 5 UK 후보 42  선택: AR+FIN_clean           rf_d4         내부 0.587 -> 외부 0.533
+[dir5] fold 6 US 후보 42  선택: FIN_clean              logit_C0.01   내부 0.544 -> 외부 0.531
+[dir5] fold 6 UK 후보 42  선택: AR+FIN_clean           logit_C0.001  내부 0.598 -> 외부 0.639
+[dir5] fold 7 US 후보 42  선택: FIN_clean              lgbm_v10      내부 0.538 -> 외부 0.503
+[dir5] fold 7 UK 후보 42  선택: AR+FIN_clean           rf_d4         내부 0.579 -> 외부 0.601
+[dir5] fold 8 US 후보 28  선택: Full                   logit_C0.1    내부 0.530 -> 외부 0.530
+[dir5] fold 8 UK 후보 28  선택: AR                     logit_C0.001  내부 0.585 -> 외부 0.512
+
+==============================================================================================================
+  [dir5] 중첩 워크포워드 OOS (42 후보, 엠바고·블록 10)
+  US  best_raw  n=1955 상승0.616  AUC 0.527 [0.481, 0.571]  Holm p=0.720  fold>0.5 6/8  fold평균 0.520  ΔvsV17top3 [-0.070, +0.009]
+  US  best_cal  n=1955 상승0.616  AUC 0.512 [0.465, 0.560]  Holm p=0.720  fold>0.5 6/8  fold평균 0.520  ΔvsV17top3 [-0.085, -0.007]
+  US  top3_raw  n=1955 상승0.616  AUC 0.557 [0.513, 0.600]  Holm p=0.043  fold>0.5 6/8  fold평균 0.538  ΔvsV17top3 [-0.019, +0.018]
+  US  top3_cal  n=1955 상승0.616  AUC 0.529 [0.484, 0.576]  Holm p=0.693  fold>0.5 6/8  fold평균 0.539  ΔvsV17top3 [-0.054, -0.002]
+  UK  best_raw  n=1878 상승0.564  AUC 0.525 [0.482, 0.570]  Holm p=0.720  fold>0.5 8/8  fold평균 0.570  ΔvsV17top3 [-0.021, +0.015]
+  UK  best_cal  n=1878 상승0.564  AUC 0.523 [0.480, 0.570]  Holm p=0.720  fold>0.5 8/8  fold평균 0.570  ΔvsV17top3 [-0.020, +0.013]
+  UK  top3_raw  n=1878 상승0.564  AUC 0.516 [0.475, 0.560]  Holm p=0.720  fold>0.5 8/8  fold평균 0.569  ΔvsV17top3 [-0.028, +0.007]
+  UK  top3_cal  n=1878 상승0.564  AUC 0.522 [0.478, 0.567]  Holm p=0.720  fold>0.5 8/8  fold평균 0.577  ΔvsV17top3 [-0.019, +0.009]
+
+저장: 방향성개선_v18
